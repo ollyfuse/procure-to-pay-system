@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Q
 from .models import PurchaseRequest
@@ -10,6 +12,8 @@ from apps.users.permissions import IsStaff, IsApprover, CanApproveRequest
 from apps.approvals.models import Approval
 from apps.approvals.serializers import ApprovalActionSerializer
 from apps.po.models import PurchaseOrder
+from apps.documents.serializers import ProformaUploadSerializer
+from apps.documents.tasks import process_proforma_document
 
 class PurchaseRequestViewSet(viewsets.ModelViewSet):
     serializer_class = PurchaseRequestSerializer
@@ -49,10 +53,13 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         elif self.action in ['approve', 'reject']:
             permission_classes = [permissions.IsAuthenticated, IsApprover, CanApproveRequest]
+        elif self.action == 'upload_proforma':
+            permission_classes = [permissions.IsAuthenticated, IsStaff, IsOwnerOrReadOnly]
         else:
             permission_classes = [permissions.IsAuthenticated]
         
         return [permission() for permission in permission_classes]
+    
     
     def perform_create(self, serializer):
         """Set the created_by field to the current user"""
@@ -69,6 +76,53 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             )
         
         return super().update(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_proforma(self, request, pk=None):
+        """Upload proforma document for processing"""
+        purchase_request = self.get_object()
+        
+        # Check if request is still editable
+        if purchase_request.is_locked:
+            return Response(
+                {'error': 'Cannot upload proforma for approved or rejected request'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate file
+        serializer = ProformaUploadSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        uploaded_file = serializer.validated_data['file']
+        
+        try:
+            # Save file
+            file_path = f'proformas/{purchase_request.id}/{uploaded_file.name}'
+            saved_path = default_storage.save(file_path, uploaded_file)
+            
+            # Update request with file path
+            purchase_request.proforma_file = saved_path
+            purchase_request.save()
+            
+            # Start async processing
+            task = process_proforma_document.delay(
+                str(purchase_request.id),
+                saved_path
+            )
+            
+            return Response({
+                'status': 'success',
+                'message': 'Proforma uploaded successfully. Processing started.',
+                'file_path': saved_path,
+                'task_id': task.id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'File upload failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['patch'])
     def approve(self, request, pk=None):
@@ -167,9 +221,16 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
                 'total_price': str(item.total_price)
             })
         
+        # Use proforma metadata if available
+        vendor_name = 'TBD'
+        if hasattr(purchase_request, 'proforma_metadata'):
+            metadata = purchase_request.proforma_metadata
+            if metadata.vendor_name:
+                vendor_name = metadata.vendor_name
+        
         PurchaseOrder.objects.create(
             request=purchase_request,
             total_amount=purchase_request.total_amount,
             items=items_data,
-            vendor_name='TBD'  # Will be extracted from proforma in later sprints
+            vendor_name=vendor_name
         )

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import PurchaseRequest, RequestItem
 from apps.approvals.serializers import ApprovalSerializer
 from apps.po.models import PurchaseOrder
+from apps.documents.serializers import ProformaMetadataSerializer
 
 class RequestItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,26 +21,40 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     approvals = ApprovalSerializer(many=True, read_only=True)
     purchase_order = PurchaseOrderSerializer(read_only=True)
+    proforma_metadata = ProformaMetadataSerializer(read_only=True)
     
     # Computed fields
     is_locked = serializers.BooleanField(read_only=True)
     next_approval_level = serializers.IntegerField(read_only=True)
     is_fully_approved = serializers.BooleanField(read_only=True)
     
+    # File fields
+    proforma_file_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = PurchaseRequest
         fields = [
             'id', 'title', 'description', 'total_amount', 'status',
             'current_approval_level', 'created_by', 'created_by_username',
-            'proforma_file', 'purchase_order_file', 'receipt_file',
+            'proforma_file', 'proforma_file_url', 'purchase_order_file', 'receipt_file',
             'version', 'created_at', 'updated_at', 'items', 'approvals',
-            'purchase_order', 'is_locked', 'next_approval_level', 'is_fully_approved'
+            'purchase_order', 'proforma_metadata', 'is_locked', 'next_approval_level', 'is_fully_approved'
         ]
         read_only_fields = [
             'id', 'status', 'created_by', 'created_by_username',
             'purchase_order_file', 'version', 'created_at', 'updated_at',
-            'approvals', 'purchase_order', 'is_locked', 'next_approval_level', 'is_fully_approved'
+            'approvals', 'purchase_order', 'proforma_metadata', 'is_locked', 
+            'next_approval_level', 'is_fully_approved', 'proforma_file_url'
         ]
+
+    def get_proforma_file_url(self, obj):
+        """Get URL for proforma file"""
+        if obj.proforma_file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.proforma_file.url)
+            return obj.proforma_file.url
+        return None
 
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])

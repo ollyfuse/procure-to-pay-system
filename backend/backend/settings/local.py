@@ -4,7 +4,7 @@ from .base import *
 DEBUG = True
 
 # Allowed hosts for development
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver', '*']
 
 # Database - SQLite for local development (or PostgreSQL if you prefer)
 DATABASES = {
