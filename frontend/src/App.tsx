@@ -10,6 +10,8 @@ import { Requests } from './pages/Requests';
 import { CreateRequest } from './pages/CreateRequest';
 import { Approvals } from './pages/Approvals';
 import { Finance } from './pages/Finance';
+import { RequestDetail } from './pages/RequestDetail';
+import { ApprovalHistory } from './pages/ApprovalHistory';
 import './App.css';
 
 function App() {
@@ -57,12 +59,29 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+
+            <Route path="/requests/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <RequestDetail />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
             
             {/* Approver Routes */}
             <Route path="/approvals" element={
               <ProtectedRoute requiredRole={['approver_level_1', 'approver_level_2']}>
                 <Layout>
                   <Approvals />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/approvals/history" element={
+              <ProtectedRoute requiredRole={['approver_level_1', 'approver_level_2']}>
+                <Layout>
+                  <ApprovalHistory />
                 </Layout>
               </ProtectedRoute>
             } />

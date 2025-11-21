@@ -18,7 +18,7 @@ from apps.documents.tasks import process_proforma_document
 class PurchaseRequestViewSet(viewsets.ModelViewSet):
     serializer_class = PurchaseRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         user = self.request.user
         
@@ -26,25 +26,63 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         if user.role == 'staff':
             return PurchaseRequest.objects.filter(created_by=user)
         
-        # Approvers see pending requests for their level
+        # Approvers see pending requests for their level + requests they can view for detail
         elif user.is_approver:
-            if user.role == 'approver_level_1':
+            if self.action == 'my_approvals':
+                # For approval history, only show requests where user has made a decision
                 return PurchaseRequest.objects.filter(
-                    status='pending',
-                    current_approval_level=1
-                )
-            elif user.role == 'approver_level_2':
-                return PurchaseRequest.objects.filter(
-                    status='pending',
-                    current_approval_level=2
-                )
+                    approvals__approver=user
+                ).distinct().order_by('-updated_at')
+            elif self.action == 'retrieve':
+                # For detail view, show any request they have permission to see
+                if user.role == 'approver_level_1':
+                    return PurchaseRequest.objects.filter(
+                        Q(current_approval_level=1) | 
+                        Q(approvals__approver=user)
+                    ).distinct()
+                elif user.role == 'approver_level_2':
+                    return PurchaseRequest.objects.filter(
+                        Q(current_approval_level=2) | 
+                        Q(approvals__approver=user)
+                    ).distinct()
+            else:
+                # For list view, only show pending requests for their level
+                if user.role == 'approver_level_1':
+                    return PurchaseRequest.objects.filter(
+                        status='pending',
+                        current_approval_level=1
+                    )
+                elif user.role == 'approver_level_2':
+                    return PurchaseRequest.objects.filter(
+                        status='pending',
+                        current_approval_level=2
+                    )
         
         # Finance can see approved requests
         elif user.is_finance:
             return PurchaseRequest.objects.filter(status='approved')
         
         return PurchaseRequest.objects.none()
-    
+
+   
+    @action(detail=False, methods=['get'])
+    def my_approvals(self, request):
+        """Get requests that the current user has approved/rejected"""
+        user = request.user
+        
+        if not user.is_approver:
+            return Response({'error': 'Only approvers can access this endpoint'}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
+        # Get only requests where user has actually made an approval decision
+        # This bypasses get_queryset() to avoid any interference
+        approved_requests = PurchaseRequest.objects.filter(
+            approvals__approver=user
+        ).distinct().order_by('-updated_at')
+        
+        serializer = self.get_serializer(approved_requests, many=True)
+        return Response(serializer.data)
+
     def get_permissions(self):
         """Set permissions based on action"""
         if self.action == 'create':

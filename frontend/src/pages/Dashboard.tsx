@@ -1,5 +1,7 @@
-import React from 'react';
+// Complete Dashboard.tsx
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { dashboardService } from '../services/dashboard';
 import { 
   DocumentTextIcon, 
   ClipboardDocumentCheckIcon, 
@@ -7,8 +9,37 @@ import {
   CheckCircleIcon 
 } from '@heroicons/react/24/outline';
 
+interface DashboardStats {
+  total_requests: number;
+  pending_requests: number;
+  approved_requests: number;
+  rejected_requests: number;
+}
+
 export const Dashboard: React.FC = () => {
   const { user, isStaff, isApprover, isFinance } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    total_requests: 0,
+    pending_requests: 0,
+    approved_requests: 0,
+    rejected_requests: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await dashboardService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   const getWelcomeMessage = () => {
     const firstName = user?.first_name || user?.username;
@@ -83,13 +114,9 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
-          Dashboard
-        </h1>
-        <p className="text-primary-100">
-          {getWelcomeMessage()}
-        </p>
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+        <p className="text-teal-100">{getWelcomeMessage()}</p>
       </div>
 
       {/* Quick Actions */}
@@ -105,12 +132,8 @@ export const Dashboard: React.FC = () => {
                 <card.icon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {card.title}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {card.description}
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">{card.title}</h3>
+                <p className="text-sm text-gray-600">{card.description}</p>
               </div>
             </div>
           </div>
@@ -120,19 +143,27 @@ export const Dashboard: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="card text-center">
-          <div className="text-2xl font-bold text-primary-600">0</div>
+          <div className="text-2xl font-bold text-teal-600">
+            {loading ? '...' : stats.total_requests}
+          </div>
           <div className="text-sm text-gray-600">Total Requests</div>
         </div>
         <div className="card text-center">
-          <div className="text-2xl font-bold text-warning-600">0</div>
+          <div className="text-2xl font-bold text-orange-600">
+            {loading ? '...' : stats.pending_requests}
+          </div>
           <div className="text-sm text-gray-600">Pending</div>
         </div>
         <div className="card text-center">
-          <div className="text-2xl font-bold text-success-600">0</div>
+          <div className="text-2xl font-bold text-green-600">
+            {loading ? '...' : stats.approved_requests}
+          </div>
           <div className="text-sm text-gray-600">Approved</div>
         </div>
         <div className="card text-center">
-          <div className="text-2xl font-bold text-danger-600">0</div>
+          <div className="text-2xl font-bold text-red-600">
+            {loading ? '...' : stats.rejected_requests}
+          </div>
           <div className="text-sm text-gray-600">Rejected</div>
         </div>
       </div>

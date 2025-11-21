@@ -1,5 +1,5 @@
 from .base import *
-
+import os
 # Debug mode
 DEBUG = True
 
@@ -13,6 +13,9 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # For PostgreSQL in local development, uncomment below:
 # DATABASES = {
