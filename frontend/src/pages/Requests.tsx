@@ -1,6 +1,5 @@
-// Updated Requests.tsx with real data
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { requestService } from '../services/requests';
 import { StatusBadge } from '../components';
@@ -10,12 +9,26 @@ export const Requests: React.FC = () => {
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get('status');
+  const receiptsFilter = searchParams.get('receipts_pending');
 
   useEffect(() => {
     const loadRequests = async () => {
       try {
         const data = await requestService.getRequests();
-        setRequests(data);
+        let filteredRequests = data;
+        
+        // Apply filters based on URL params
+        if (statusFilter) {
+          filteredRequests = filteredRequests.filter(req => req.status === statusFilter);
+        } else if (receiptsFilter === 'true') {
+          filteredRequests = filteredRequests.filter(req => 
+            req.payment_status === 'paid' && !req.receipt_submitted && req.receipt_required
+          );
+        }
+        
+        setRequests(filteredRequests);
       } catch (err: any) {
         setError(err.response?.data?.detail || 'Failed to load requests');
       } finally {
@@ -24,13 +37,21 @@ export const Requests: React.FC = () => {
     };
 
     loadRequests();
-  }, []);
+  }, [statusFilter, receiptsFilter]);
+
+  const getPageTitle = () => {
+    if (statusFilter === 'pending') return 'Pending Requests';
+    if (statusFilter === 'approved') return 'Approved Requests';
+    if (statusFilter === 'rejected') return 'Rejected Requests';
+    if (receiptsFilter === 'true') return 'Receipts Pending';
+    return 'My Requests';
+  };
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">My Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
           <Link to="/requests/new" className="btn-primary">
             <PlusIcon className="h-5 w-5 mr-2" />
             Create Request
@@ -47,7 +68,7 @@ export const Requests: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">My Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
           <Link to="/requests/new" className="btn-primary">
             <PlusIcon className="h-5 w-5 mr-2" />
             Create Request
@@ -63,7 +84,14 @@ export const Requests: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">My Requests</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+          {(statusFilter || receiptsFilter) && (
+            <Link to="/requests" className="text-sm text-teal-600 hover:text-teal-800">
+              ← View All Requests
+            </Link>
+          )}
+        </div>
         <Link to="/requests/new" className="btn-primary">
           <PlusIcon className="h-5 w-5 mr-2" />
           Create Request
@@ -72,7 +100,9 @@ export const Requests: React.FC = () => {
 
       {requests.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-500 mb-4">No requests found</p>
+          <p className="text-gray-500 mb-4">
+            {statusFilter || receiptsFilter ? 'No requests found for this filter' : 'No requests found'}
+          </p>
           <Link to="/requests/new" className="btn-primary">
             Create Your First Request
           </Link>
@@ -92,6 +122,11 @@ export const Requests: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
+                  {receiptsFilter === 'true' && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Receipt Status
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created
                   </th>
@@ -117,6 +152,11 @@ export const Requests: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={request.status} />
                     </td>
+                    {receiptsFilter === 'true' && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className="text-red-600 font-medium">Receipt Required</span>
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(request.created_at).toLocaleDateString()}
                     </td>
@@ -125,7 +165,7 @@ export const Requests: React.FC = () => {
                         to={`/requests/${request.id}`}
                         className="text-teal-600 hover:text-teal-900"
                       >
-                        View
+                        {receiptsFilter === 'true' ? 'Upload Receipt' : 'View'}
                       </Link>
                     </td>
                   </tr>

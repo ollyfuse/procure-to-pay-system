@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { 
   BellIcon, 
   UserCircleIcon, 
@@ -11,6 +12,7 @@ import {
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
 
   const getRoleDisplayName = (role: string) => {
     const roleMap: Record<string, string> = {
@@ -99,12 +101,15 @@ export const Navbar: React.FC = () => {
                   
                   <button
                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setShowUserMenu(false)}
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate('/profile');
+                    }}
                   >
                     <Cog6ToothIcon className="h-4 w-4 mr-3 text-gray-400" />
-                    Settings
+                    Profile Settings
                   </button>
-                  
+                                    
                   <button
                     onClick={() => {
                       setShowUserMenu(false);

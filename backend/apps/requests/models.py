@@ -10,6 +10,13 @@ class PurchaseRequest(models.Model):
         PENDING = 'pending', 'Pending'
         APPROVED = 'approved', 'Approved'
         REJECTED = 'rejected', 'Rejected'
+        NEED_INFO = 'need_info', 'Need More Information'
+
+    class PaymentStatus(models.TextChoices):
+        PENDING = 'pending', 'Pending Payment'
+        PAID = 'paid', 'Paid'
+        PARTIALLY_PAID = 'partially_paid', 'Partially Paid'
+        ON_HOLD = 'on_hold', 'On Hold'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
@@ -27,6 +34,21 @@ class PurchaseRequest(models.Model):
     proforma_file = models.FileField(upload_to='proformas/', null=True, blank=True)
     purchase_order_file = models.FileField(upload_to='purchase_orders/', null=True, blank=True)
     receipt_file = models.FileField(upload_to='receipts/', null=True, blank=True)
+    
+    # Payment fields
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.PENDING
+    )
+    payment_proof = models.FileField(upload_to='payment_proofs/', null=True, blank=True)
+    receipt_required = models.BooleanField(default=True)
+    receipt_submitted = models.BooleanField(default=False)
+    
+    # Clarification fields
+    clarification_requested = models.BooleanField(default=False)
+    clarification_message = models.TextField(blank=True)
+    clarification_response = models.TextField(blank=True)
     
     # Optimistic locking
     version = models.PositiveIntegerField(default=1)

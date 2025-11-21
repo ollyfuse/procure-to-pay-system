@@ -4,7 +4,8 @@ import type { PurchaseRequest } from '../types';
 export const requestService = {
   async getRequests(): Promise<PurchaseRequest[]> {
     const response = await api.get('/requests/');
-    return response.data.results || [];
+    // Handle both paginated and non-paginated responses
+    return response.data.results || response.data;
   },
 
   async getRequest(id: string): Promise<PurchaseRequest> {
@@ -27,29 +28,44 @@ export const requestService = {
   },
 
   async approveRequest(id: string, data?: { comment?: string }): Promise<void> {
-    console.log('Approving request:', id, 'with data:', data);
-    console.log('Full URL:', `/requests/${id}/approve/`);
-    const response = await api.patch(`/requests/${id}/approve/`, data);
-    console.log('Response:', response);
-    },
-    
-    async getMyApprovals(): Promise<PurchaseRequest[]> {
-    const response = await api.get('/requests/my_approvals/');
-    return response.data.results || response.data;
-    },
+    await api.patch(`/requests/${id}/approve/`, data);
+  },
 
   async rejectRequest(id: string, data?: { comment?: string }): Promise<void> {
     await api.patch(`/requests/${id}/reject/`, data);
   },
-  async uploadProforma(id: string, file: File): Promise<PurchaseRequest> {
+
+  async getMyApprovals(): Promise<PurchaseRequest[]> {
+    const response = await api.get('/requests/my_approvals/');
+    // Handle both paginated and non-paginated responses
+    return response.data.results || response.data;
+  },
+
+  // New methods for enhanced workflow
+  async requestClarification(id: string, message: string): Promise<void> {
+    await api.post(`/requests/${id}/request_clarification/`, { message });
+  },
+
+  async respondToClarification(id: string, response: string): Promise<void> {
+    await api.post(`/requests/${id}/respond_to_clarification/`, { response });
+  },
+
+  async uploadReceipt(id: string, file: File): Promise<void> {
     const formData = new FormData();
-    formData.append('proforma_file', file);
-    
-    const response = await api.post(`/requests/${id}/upload-proforma/`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    formData.append('receipt', file);
+    await api.post(`/requests/${id}/upload_receipt/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
-    return response.data;
+  },
+
+  async updatePaymentStatus(id: string, paymentStatus: string, paymentProof?: File): Promise<void> {
+    const formData = new FormData();
+    formData.append('payment_status', paymentStatus);
+    if (paymentProof) {
+      formData.append('payment_proof', paymentProof);
+    }
+    await api.patch(`/requests/${id}/update_payment_status/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   }
 };

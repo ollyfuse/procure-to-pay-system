@@ -5,6 +5,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User, token: string) => void;
   logout: () => void;
+  updateUser: (userData: User) => void;
   isAuthenticated: boolean;
   isStaff: boolean;
   isApprover: boolean;
@@ -58,16 +59,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
-  const value: AuthContextType = {
-    user,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    isStaff: user?.role === 'staff',
-    isApprover: user?.role?.includes('approver') || false,
-    isFinance: user?.role === 'finance',
-    loading,
-  };
+const updateUser = (userData: User) => {
+  localStorage.setItem('user', JSON.stringify(userData));
+  setUser(userData);
+};
+
+const value: AuthContextType = {
+  user,
+  login,
+  logout,
+  updateUser,  // Now this will work
+  isAuthenticated: !!user,
+  isStaff: user?.role === 'staff',
+  isApprover: user?.role?.includes('approver') || false,
+  isFinance: user?.role === 'finance',
+  loading,
+};
 
   return (
     <AuthContext.Provider value={value}>

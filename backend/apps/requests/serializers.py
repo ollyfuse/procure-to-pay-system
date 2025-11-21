@@ -30,13 +30,18 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
     
     # File fields
     proforma_file_url = serializers.SerializerMethodField()
+    receipt_file_url = serializers.SerializerMethodField()
+    payment_proof_url = serializers.SerializerMethodField()
     
     class Meta:
         model = PurchaseRequest
         fields = [
             'id', 'title', 'description', 'total_amount', 'status',
             'current_approval_level', 'created_by', 'created_by_username',
-            'proforma_file', 'proforma_file_url', 'purchase_order_file', 'receipt_file',
+            'proforma_file', 'proforma_file_url', 'purchase_order_file', 
+            'receipt_file', 'receipt_file_url', 'payment_proof', 'payment_proof_url',
+            'payment_status', 'receipt_required', 'receipt_submitted',
+            'clarification_requested', 'clarification_message', 'clarification_response',
             'version', 'created_at', 'updated_at', 'items', 'approvals',
             'purchase_order', 'proforma_metadata', 'is_locked', 'next_approval_level', 'is_fully_approved'
         ]
@@ -44,7 +49,8 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
             'id', 'status', 'created_by', 'created_by_username',
             'purchase_order_file', 'version', 'created_at', 'updated_at',
             'approvals', 'purchase_order', 'proforma_metadata', 'is_locked', 
-            'next_approval_level', 'is_fully_approved', 'proforma_file_url'
+            'next_approval_level', 'is_fully_approved', 'proforma_file_url',
+            'receipt_file_url', 'payment_proof_url'
         ]
 
     def get_proforma_file_url(self, obj):
@@ -54,6 +60,24 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(obj.proforma_file.url)
             return obj.proforma_file.url
+        return None
+
+    def get_receipt_file_url(self, obj):
+        """Get URL for receipt file"""
+        if obj.receipt_file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.receipt_file.url)
+            return obj.receipt_file.url
+        return None
+
+    def get_payment_proof_url(self, obj):
+        """Get URL for payment proof file"""
+        if obj.payment_proof:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.payment_proof.url)
+            return obj.payment_proof.url
         return None
 
     def create(self, validated_data):

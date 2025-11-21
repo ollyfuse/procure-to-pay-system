@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { requestService } from '../services/requests';
 import type { PurchaseRequest } from '../types';
-import { StatusBadge, Upload, DocumentViewer } from '../components';
+import { 
+  StatusBadge, 
+  Upload, 
+  DocumentViewer, 
+  ClarificationManager, 
+  ReceiptUpload, 
+  PaymentManager 
+} from '../components';
 import { fileService } from '../services/files';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -10,7 +17,7 @@ import toast from 'react-hot-toast';
 export const RequestDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isApprover } = useAuth();
+  const { user, isApprover, isFinance } = useAuth();
   const [req, setReq] = useState<PurchaseRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +29,10 @@ export const RequestDetail: React.FC = () => {
   );
   const canEdit = useMemo(() => 
     req && !req.is_locked && req.created_by === user?.id, [req, user]
+  );
+  const needsReceipt = useMemo(() =>
+    req && req.payment_status === 'paid' && !req.receipt_submitted && req.receipt_required && req.created_by === user?.id,
+    [req, user]
   );
 
   const load = async () => {
@@ -101,6 +112,20 @@ export const RequestDetail: React.FC = () => {
         </button>
       </div>
 
+      {/* Clarification Alert */}
+      {req.clarification_requested && (
+        <ClarificationManager request={req} onUpdate={load} />
+      )}
+
+      {/* Receipt Upload Alert */}
+      {needsReceipt && (
+        <div className="card bg-purple-50 border-purple-200">
+          <h3 className="font-semibold text-purple-800 mb-4">Receipt Required</h3>
+          <p className="text-purple-700 mb-4">Your request has been paid. Please upload your receipt.</p>
+          <ReceiptUpload requestId={req.id} onUploadComplete={load} />
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Main Details */}
@@ -114,7 +139,18 @@ export const RequestDetail: React.FC = () => {
                   Created by {req.created_by_username} • {new Date(req.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <StatusBadge status={req.status} />
+              <div className="flex flex-col items-end gap-2">
+                <StatusBadge status={req.status} />
+                {req.payment_status !== 'pending' && (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    req.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                    req.payment_status === 'partially_paid' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {req.payment_status.replace('_', ' ')}
+                  </span>
+                )}
+              </div>
             </div>
             
             {req.description && (
@@ -248,6 +284,22 @@ export const RequestDetail: React.FC = () => {
             )}
           </div>
 
+          {/* Receipt Document */}
+          {req.receipt_file_url && (
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-4">Receipt</h3>
+              <DocumentViewer url={req.receipt_file_url} />
+            </div>
+          )}
+
+          {/* Payment Proof */}
+          {req.payment_proof_url && (
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-4">Payment Proof</h3>
+              <DocumentViewer url={req.payment_proof_url} />
+            </div>
+          )}
+
           {/* Extracted Metadata */}
           {req.proforma_metadata && (
             <div className="card">
@@ -286,8 +338,18 @@ export const RequestDetail: React.FC = () => {
             </div>
           )}
 
+          {/* Finance Payment Management */}
+          {isFinance && req.status === 'approved' && (
+            <PaymentManager request={req} onUpdate={load} />
+          )}
+
+          {/* Clarification Actions */}
+          {(canApprove || req.clarification_requested) && (
+            <ClarificationManager request={req} onUpdate={load} />
+          )}
+
           {/* Approval Actions */}
-          {canApprove && (
+          {canApprove && !req.clarification_requested && (
             <div className="card">
               <h3 className="font-semibold text-gray-900 mb-4">Review Request</h3>
               <div className="space-y-4">

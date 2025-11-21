@@ -1,16 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { requestService } from '../services/requests';
 import { StatusBadge } from '../components';
 import type { PurchaseRequest } from '../types';
 import { useAuth } from '../context/AuthContext';
-
 
 export const ApprovalHistory: React.FC = () => {
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const actionFilter = searchParams.get('action');
+
+  const filteredRequests = useMemo(() => {
+    if (!actionFilter) return requests;
+    
+    return requests.filter(request => {
+      const myApproval = request.approvals?.find(a => a.approver === user?.id);
+      return myApproval?.action === actionFilter;
+    });
+  }, [requests, actionFilter, user?.id]);
+
+  const pageTitle = actionFilter === 'approved' ? 'Approved by Me' : 
+                   actionFilter === 'rejected' ? 'Rejected by Me' : 
+                   'My Approval History';
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -29,7 +43,7 @@ export const ApprovalHistory: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Approval History</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
         <div className="card text-center py-12">
           <div className="text-gray-500">Loading approval history...</div>
         </div>
@@ -40,7 +54,7 @@ export const ApprovalHistory: React.FC = () => {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Approval History</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
         <div className="card text-center py-12">
           <div className="text-red-600">{error}</div>
         </div>
@@ -50,11 +64,13 @@ export const ApprovalHistory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">My Approval History</h1>
+      <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
       
-      {requests.length === 0 ? (
+      {filteredRequests.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-500">No approval history found</p>
+          <p className="text-gray-500">
+            {actionFilter ? `No ${actionFilter} requests found` : 'No approval history found'}
+          </p>
         </div>
       ) : (
         <div className="card">
@@ -80,7 +96,7 @@ export const ApprovalHistory: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {requests.map((request) => {
+                {filteredRequests.map((request) => {
                   const myApproval = request.approvals?.find(a => a.approver === user?.id);
                   return (
                     <tr key={request.id} className="hover:bg-gray-50">

@@ -12,6 +12,7 @@ import { Approvals } from './pages/Approvals';
 import { Finance } from './pages/Finance';
 import { RequestDetail } from './pages/RequestDetail';
 import { ApprovalHistory } from './pages/ApprovalHistory';
+import { Profile } from './pages/Profile';
 import './App.css';
 
 function App() {
@@ -39,6 +40,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Profile />
                 </Layout>
               </ProtectedRoute>
             } />
@@ -77,7 +85,7 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            
+
             <Route path="/approvals/history" element={
               <ProtectedRoute requiredRole={['approver_level_1', 'approver_level_2']}>
                 <Layout>

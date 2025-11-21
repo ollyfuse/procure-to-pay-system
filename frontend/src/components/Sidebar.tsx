@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   HomeIcon,
@@ -10,10 +10,14 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ReceiptPercentIcon,
 } from '@heroicons/react/24/outline';
 
 export const Sidebar: React.FC = () => {
   const { user, isStaff, isApprover, isFinance, logout } = useAuth();
+  const location = useLocation();
 
   const navItems = [
     {
@@ -22,10 +26,35 @@ export const Sidebar: React.FC = () => {
       icon: HomeIcon,
       show: true,
     },
+    // Staff Navigation - Categorized
     {
-      name: 'My Requests',
+      name: 'All Requests',
       href: '/requests',
       icon: DocumentTextIcon,
+      show: isStaff,
+    },
+    {
+      name: 'Pending Requests',
+      href: '/requests?status=pending',
+      icon: ClockIcon,
+      show: isStaff,
+    },
+    {
+      name: 'Approved Requests',
+      href: '/requests?status=approved',
+      icon: CheckCircleIcon,
+      show: isStaff,
+    },
+    {
+      name: 'Rejected Requests',
+      href: '/requests?status=rejected',
+      icon: XCircleIcon,
+      show: isStaff,
+    },
+    {
+      name: 'Receipts Pending',
+      href: '/requests?receipts_pending=true',
+      icon: ReceiptPercentIcon,
       show: isStaff,
     },
     {
@@ -34,25 +63,57 @@ export const Sidebar: React.FC = () => {
       icon: PlusIcon,
       show: isStaff,
     },
+    // Approver Navigation - Enhanced
     {
-      name: 'Approvals',
+      name: 'Waiting for My Approval',
       href: '/approvals',
       icon: ClipboardDocumentCheckIcon,
       show: isApprover,
     },
     {
-      name: 'Finance',
-      href: '/finance',
-      icon: BanknotesIcon,
+      name: 'Approved by Me',
+      href: '/approvals/history?action=approved',
+      icon: CheckCircleIcon,
+      show: isApprover,
+    },
+    {
+      name: 'Rejected by Me',
+      href: '/approvals/history?action=rejected',
+      icon: XCircleIcon,
+      show: isApprover,
+    },
+    // Finance Navigation - Enhanced
+    {
+      name: 'Awaiting Finance Review',
+      href: '/finance?status=awaiting_review',
+      icon: ClockIcon,
       show: isFinance,
     },
     {
-    name: 'My History',
-    href: '/approvals/history',
-    icon: ClockIcon, 
-    show: isApprover,
-  },
+      name: 'Paid Requests',
+      href: '/finance?status=paid',
+      icon: CheckCircleIcon,
+      show: isFinance,
+    },
+    {
+      name: 'On Hold Requests',
+      href: '/finance?status=on_hold',
+      icon: XCircleIcon,
+      show: isFinance,
+    },
+    {
+      name: 'Missing Receipts',
+      href: '/finance?missing_receipts=true',
+      icon: ReceiptPercentIcon,
+      show: isFinance,
+    },
   ];
+
+
+  const isActiveLink = (href: string) => {
+    const currentPath = location.pathname + location.search;
+    return currentPath === href;
+  };
 
   const getRoleDisplay = (role: string) => {
     const roleMap: Record<string, string> = {
@@ -77,7 +138,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white shadow-lg border-r border-gray-200 min-h-screen flex flex-col">
       {/* Logo/Brand */}
-      {/* <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex items-center">
           <div className="h-8 w-8 bg-teal-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">P2P</span>
@@ -86,38 +147,69 @@ export const Sidebar: React.FC = () => {
             <h1 className="text-lg font-semibold text-gray-900">Procure-to-Pay</h1>
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navItems
           .filter(item => item.show)
-          .map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) =>
-                `group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+          .map((item) => {
+            const isActive = isActiveLink(item.href);
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
                   isActive
                     ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon 
-                    className={`h-5 w-5 mr-3 transition-colors duration-200 ${
-                      isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'
-                    }`} 
-                  />
-                  {item.name}
-                </>
-              )}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <item.icon 
+                  className={`h-5 w-5 mr-3 transition-colors duration-200 ${
+                    isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'
+                  }`} 
+                />
+                {item.name}
+              </NavLink>
+            );
+          })}
       </nav>
-  
+
+      {/* User Profile Section */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="bg-gray-50 rounded-lg p-4 mb-3">
+          <div className="flex items-center">
+            <div className="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center">
+              <UserCircleIcon className="h-6 w-6 text-gray-600" />
+            </div>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.first_name && user?.last_name 
+                  ? `${user.first_name} ${user.last_name}`
+                  : user?.username
+                }
+              </p>
+              <div className="mt-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  user?.role ? getRoleColor(user.role) : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {user?.role ? getRoleDisplay(user.role) : 'User'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={logout}
+          className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+        >
+          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3 text-gray-400" />
+          Sign Out
+        </button>
+      </div>
     </aside>
   );
 };

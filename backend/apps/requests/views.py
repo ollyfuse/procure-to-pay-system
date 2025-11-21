@@ -14,6 +14,9 @@ from apps.approvals.serializers import ApprovalActionSerializer
 from apps.po.models import PurchaseOrder
 from apps.documents.serializers import ProformaUploadSerializer
 from apps.documents.tasks import process_proforma_document
+from apps.notifications.tasks import send_approval_notification, send_clarification_request, send_receipt_reminder, send_finance_notification
+from apps.users.permissions import IsStaff, IsApprover, CanApproveRequest, IsFinance
+
 
 class PurchaseRequestViewSet(viewsets.ModelViewSet):
     serializer_class = PurchaseRequestSerializer
@@ -89,15 +92,17 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.IsAuthenticated, IsStaff]
         elif self.action in ['update', 'partial_update', 'destroy']:
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-        elif self.action in ['approve', 'reject']:
+        elif self.action in ['approve', 'reject', 'request_clarification']:
             permission_classes = [permissions.IsAuthenticated, IsApprover, CanApproveRequest]
-        elif self.action == 'upload_proforma':
+        elif self.action in ['upload_proforma', 'upload_receipt', 'respond_to_clarification']:
             permission_classes = [permissions.IsAuthenticated, IsStaff, IsOwnerOrReadOnly]
+        elif self.action == 'update_payment_status':
+            permission_classes = [permissions.IsAuthenticated, IsFinance]
         else:
             permission_classes = [permissions.IsAuthenticated]
         
         return [permission() for permission in permission_classes]
-    
+
     
     def perform_create(self, serializer):
         """Set the created_by field to the current user"""
@@ -214,7 +219,7 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        # Create approval record
+        # Create approval record (ONLY ONCE)
         approval = Approval.objects.create(
             request=purchase_request,
             approver=request.user,
@@ -227,18 +232,23 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         if action == 'rejected':
             purchase_request.status = PurchaseRequest.Status.REJECTED
         elif action == 'approved':
-            # Check if this is the final approval
             if purchase_request.is_fully_approved:
                 purchase_request.status = PurchaseRequest.Status.APPROVED
-                # Create PO
                 self._create_purchase_order(purchase_request)
+                send_finance_notification.delay(str(purchase_request.id))
             else:
-                # Move to next approval level
                 purchase_request.current_approval_level = purchase_request.next_approval_level
         
         # Increment version for optimistic locking
         purchase_request.version += 1
         purchase_request.save()
+
+        # Send notification to requester
+        send_approval_notification.delay(
+            str(purchase_request.id), 
+            action, 
+            request.user.get_full_name() or request.user.username
+        )
         
         return Response({
             'message': f'Request {action} successfully',
@@ -272,3 +282,128 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             items=items_data,
             vendor_name=vendor_name
         )
+
+    @action(detail=True, methods=['post'])
+    def request_clarification(self, request, pk=None):
+        """Approver requests more information"""
+        purchase_request = self.get_object()
+        
+        if not request.user.is_approver:
+            return Response({'error': 'Only approvers can request clarification'}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
+        message = request.data.get('message', '')
+        if not message:
+            return Response({'error': 'Clarification message is required'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update request status
+        purchase_request.status = PurchaseRequest.Status.NEED_INFO
+        purchase_request.clarification_requested = True
+        purchase_request.clarification_message = message
+        purchase_request.save()
+        
+        # Send notification
+        send_clarification_request.delay(str(purchase_request.id), message)
+        
+        return Response({
+            'message': 'Clarification requested successfully',
+            'status': purchase_request.status
+        })
+
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_receipt(self, request, pk=None):
+        """Staff uploads receipt after payment"""
+        purchase_request = self.get_object()
+        
+        # Check if user owns this request
+        if purchase_request.created_by != request.user:
+            return Response({'error': 'You can only upload receipts for your own requests'}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if request is paid
+        if purchase_request.payment_status != PurchaseRequest.PaymentStatus.PAID:
+            return Response({'error': 'Can only upload receipts for paid requests'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'receipt' not in request.FILES:
+            return Response({'error': 'Receipt file is required'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        receipt_file = request.FILES['receipt']
+        
+        # Save receipt
+        file_path = f'receipts/{purchase_request.id}/{receipt_file.name}'
+        saved_path = default_storage.save(file_path, receipt_file)
+        
+        purchase_request.receipt_file = saved_path
+        purchase_request.receipt_submitted = True
+        purchase_request.save()
+        
+        return Response({
+            'message': 'Receipt uploaded successfully',
+            'file_path': saved_path
+        })
+
+    @action(detail=True, methods=['patch'], parser_classes=[MultiPartParser, FormParser])
+    def update_payment_status(self, request, pk=None):
+        """Finance updates payment status"""
+        purchase_request = self.get_object()
+        
+        if not request.user.is_finance:
+            return Response({'error': 'Only finance team can update payment status'}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
+        payment_status = request.data.get('payment_status')
+        if payment_status not in [choice[0] for choice in PurchaseRequest.PaymentStatus.choices]:
+            return Response({'error': 'Invalid payment status'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        purchase_request.payment_status = payment_status
+        
+        # Handle payment proof upload
+        if 'payment_proof' in request.FILES:
+            proof_file = request.FILES['payment_proof']
+            file_path = f'payment_proofs/{purchase_request.id}/{proof_file.name}'
+            saved_path = default_storage.save(file_path, proof_file)
+            purchase_request.payment_proof = saved_path
+        
+        purchase_request.save()
+        
+        # Send receipt reminder if paid
+        if payment_status == PurchaseRequest.PaymentStatus.PAID and purchase_request.receipt_required:
+            send_receipt_reminder.delay(str(purchase_request.id))
+        
+        return Response({
+            'message': 'Payment status updated successfully',
+            'payment_status': purchase_request.payment_status
+        })
+
+    @action(detail=True, methods=['post'])
+    def respond_to_clarification(self, request, pk=None):
+        """Staff responds to clarification request"""
+        purchase_request = self.get_object()
+        
+        if purchase_request.created_by != request.user:
+            return Response({'error': 'You can only respond to your own requests'}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
+        if not purchase_request.clarification_requested:
+            return Response({'error': 'No clarification was requested for this request'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        response_message = request.data.get('response', '')
+        if not response_message:
+            return Response({'error': 'Response message is required'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update request
+        purchase_request.clarification_response = response_message
+        purchase_request.clarification_requested = False
+        purchase_request.status = PurchaseRequest.Status.PENDING
+        purchase_request.save()
+        
+        return Response({
+            'message': 'Response submitted successfully',
+            'status': purchase_request.status
+        })

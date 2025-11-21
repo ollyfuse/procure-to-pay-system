@@ -5,3 +5,6 @@ export { StatusBadge } from './StatusBadge';
 export { ProtectedRoute } from './ProtectedRoute';
 export { Upload } from './Upload';
 export { DocumentViewer } from './DocumentViewer';
+export { ReceiptUpload } from './ReceiptUpload';
+export { PaymentManager } from './PaymentManager';
+export { ClarificationManager } from './ClarificationManager';
