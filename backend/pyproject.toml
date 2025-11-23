@@ -27,6 +27,7 @@ dependencies = [
     "openai>=1.3.0",
     "pydantic>=2.5.0",
     "python-magic>=0.4.27",
+    "google-genai",
 ]
 
 [project.optional-dependencies]

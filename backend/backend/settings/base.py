@@ -110,8 +110,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
 
-# OpenAI Configuration
-OPENAI_API_KEY = env('OPENAI_API_KEY', default='')
+# Google AI Configuration  
+GOOGLE_API_KEY = env('GOOGLE_API_KEY', default='')
 
 # Document Processing Settings
 DOCUMENT_PROCESSING = {

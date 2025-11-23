@@ -6,9 +6,9 @@ from pydantic import BaseModel, ValidationError
 from decimal import Decimal
 
 try:
-    import openai
+    from google import genai
 except ImportError:
-    openai = None
+    genai = None
 
 logger = logging.getLogger(__name__)
 
@@ -26,34 +26,28 @@ class AIExtractionService:
     
     def __init__(self):
         self.client = None
-        if openai and hasattr(settings, 'OPENAI_API_KEY'):
-            openai.api_key = settings.OPENAI_API_KEY
-            self.client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        if genai and hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY:
+            self.client = genai.Client(api_key=settings.GOOGLE_API_KEY)
     
     def extract_metadata(self, text: str) -> Dict[str, Any]:
         """Extract structured metadata from proforma text using AI"""
         if not self.client:
             return {
                 'success': False,
-                'error': 'OpenAI client not configured',
+                'error': 'Google AI client not configured',
                 'data': {}
             }
         
         try:
             prompt = self._build_extraction_prompt(text)
             
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are an expert at extracting structured data from business documents."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1,
-                max_tokens=1000
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
             )
             
             # Parse AI response
-            ai_response = response.choices[0].message.content
+            ai_response = response.text
             extracted_data = self._parse_ai_response(ai_response)
             
             # Validate with Pydantic
@@ -113,21 +107,56 @@ If any field cannot be found, use empty string for text fields, null for numbers
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse AI response and extract JSON"""
         try:
-            # Try to find JSON in the response
-            start = response.find('{')
-            end = response.rfind('}') + 1
-            
-            if start != -1 and end != -1:
-                json_str = response[start:end]
-                return json.loads(json_str)
+            # Remove markdown code blocks if present
+            if '```json' in response:
+                start = response.find('```json') + 7
+                end = response.find('```', start)
+                json_str = response[start:end].strip()
             else:
-                # If no JSON found, try parsing the whole response
-                return json.loads(response)
-                
+                # Try to find JSON in the response
+                start = response.find('{')
+                end = response.rfind('}') + 1
+                if start != -1 and end != -1:
+                    json_str = response[start:end]
+                else:
+                    json_str = response
+            
+            # Debug: Log the extracted JSON before processing
+            logger.info(f"Extracted JSON before processing: {json_str[:200]}...")
+            
+            # Decode HTML entities first
+            import html
+            json_str = html.unescape(json_str)
+            
+            # Debug: Log after HTML decode
+            logger.info(f"After HTML decode: {json_str[:200]}...")
+            
+            # Fix invalid escape sequences
+            import re 
+            json_str = re.sub(r'\\(?!["\\/bfnrt])', r'\\\\', json_str)
+            
+            # Clean up the JSON string - but be more careful with newlines
+            # Don't double-escape already escaped newlines
+            if '\\n' not in json_str:
+                json_str = json_str.replace('\n', '\\n')
+            if '\\r' not in json_str:
+                json_str = json_str.replace('\r', '\\r')
+            if '\\t' not in json_str:
+                json_str = json_str.replace('\t', '\\t')
+            
+            # Remove any stray characters that might have been inserted
+            json_str = re.sub(r'}\s*[a-zA-Z]+\s*,', '},', json_str)
+            
+            # Debug: Log final JSON before parsing
+            logger.info(f"Final JSON before parsing: {json_str[:200]}...")
+            
+            return json.loads(json_str)
+            
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
             logger.error(f"Response was: {response}")
             return {}
+
     
     def _calculate_confidence(self, data: ProformaData) -> float:
         """Calculate confidence score based on extracted data completeness"""
@@ -148,3 +177,52 @@ If any field cannot be found, use empty string for text fields, null for numbers
             score += 1
             
         return score / total_fields
+
+class ReceiptValidationService:
+    def __init__(self):
+        self.ai_service = AIExtractionService()
+    
+    def validate_receipt(self, receipt_text: str, purchase_order) -> Dict[str, Any]:
+        """Compare receipt data with PO and flag discrepancies"""
+        
+        # Extract receipt data using AI
+        receipt_data = self.ai_service.extract_metadata(receipt_text)
+        if not receipt_data['success']:
+            return {'success': False, 'error': 'Failed to extract receipt data'}
+        
+        # Compare with PO
+        discrepancies = self._compare_with_po(receipt_data['data'], purchase_order)
+        
+        validation_status = 'valid' if not discrepancies else 'discrepancy'
+        
+        return {
+            'success': True,
+            'receipt_data': receipt_data['data'],
+            'validation_status': validation_status,
+            'discrepancies': discrepancies,
+            'confidence': receipt_data.get('confidence', 0.0)
+        }
+    
+    def _compare_with_po(self, receipt_data: dict, po) -> list:
+        """Compare receipt with PO and return list of discrepancies"""
+        discrepancies = []
+        
+        # Check vendor
+        if receipt_data.get('vendor_name') and po.vendor_name:
+            if receipt_data['vendor_name'].lower() != po.vendor_name.lower():
+                discrepancies.append({
+                    'type': 'vendor_mismatch',
+                    'expected': po.vendor_name,
+                    'actual': receipt_data['vendor_name']
+                })
+        
+        # Check total amount
+        if receipt_data.get('total_amount') and po.total_amount:
+            if abs(float(receipt_data['total_amount']) - float(po.total_amount)) > 0.01:
+                discrepancies.append({
+                    'type': 'amount_mismatch',
+                    'expected': float(po.total_amount),
+                    'actual': receipt_data['total_amount']
+                })
+        
+        return discrepancies

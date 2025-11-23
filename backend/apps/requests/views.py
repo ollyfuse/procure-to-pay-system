@@ -313,26 +313,30 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload_receipt(self, request, pk=None):
-        """Staff uploads receipt after payment"""
+        """Upload and validate receipt against PO"""
         purchase_request = self.get_object()
         
-        # Check if user owns this request
+        # Check ownership
         if purchase_request.created_by != request.user:
             return Response({'error': 'You can only upload receipts for your own requests'}, 
                         status=status.HTTP_403_FORBIDDEN)
         
-        # Check if request is paid
+        # Check if paid
         if purchase_request.payment_status != PurchaseRequest.PaymentStatus.PAID:
             return Response({'error': 'Can only upload receipts for paid requests'}, 
                         status=status.HTTP_400_BAD_REQUEST)
         
-        if 'receipt' not in request.FILES:
-            return Response({'error': 'Receipt file is required'}, 
+        # Check if PO exists
+        if not hasattr(purchase_request, 'purchase_order'):
+            return Response({'error': 'No PO found for this request'}, 
                         status=status.HTTP_400_BAD_REQUEST)
         
-        receipt_file = request.FILES['receipt']
+        if 'receipt' not in request.FILES:
+            return Response({'error': 'Receipt file required'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
         
-        # Save receipt
+        # Save receipt file
+        receipt_file = request.FILES['receipt']
         file_path = f'receipts/{purchase_request.id}/{receipt_file.name}'
         saved_path = default_storage.save(file_path, receipt_file)
         
@@ -340,9 +344,14 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
         purchase_request.receipt_submitted = True
         purchase_request.save()
         
+        # Start validation process
+        from apps.documents.tasks import process_receipt_validation
+        task = process_receipt_validation.delay(str(purchase_request.id))
+        
         return Response({
-            'message': 'Receipt uploaded successfully',
-            'file_path': saved_path
+            'message': 'Receipt uploaded and validation started',
+            'file_path': saved_path,
+            'task_id': task.id
         })
 
     @action(detail=True, methods=['patch'], parser_classes=[MultiPartParser, FormParser])
@@ -407,3 +416,4 @@ class PurchaseRequestViewSet(viewsets.ModelViewSet):
             'message': 'Response submitted successfully',
             'status': purchase_request.status
         })
+

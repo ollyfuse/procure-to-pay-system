@@ -337,6 +337,56 @@ export const RequestDetail: React.FC = () => {
               </div>
             </div>
           )}
+          {/* Receipt Validation Results */}
+          {req.receipt_metadata && (
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-4">Receipt Validation</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium text-gray-700">Status:</span>
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                    req.receipt_metadata.validation_status === 'valid' 
+                      ? 'bg-green-100 text-green-800'
+                      : req.receipt_metadata.validation_status === 'discrepancy'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : req.receipt_metadata.validation_status === 'failed'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {req.receipt_metadata.validation_status}
+                  </span>
+                </div>
+                
+                {req.receipt_metadata.discrepancies.length > 0 && (
+                  <div>
+                    <span className="font-medium text-gray-700">Issues Found:</span>
+                    <ul className="mt-2 space-y-1">
+                      {req.receipt_metadata.discrepancies.map((issue, index) => (
+                        <li key={index} className="text-red-600 text-xs">
+                          • {issue.type.replace('_', ' ')}: Expected "{issue.expected}", Got "{issue.actual}"
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {req.receipt_metadata.vendor_name && (
+                  <div>
+                    <span className="font-medium text-gray-700">Receipt Vendor:</span>
+                    <span className="ml-2 text-gray-900">{req.receipt_metadata.vendor_name}</span>
+                  </div>
+                )}
+                
+                {req.receipt_metadata.total_amount && (
+                  <div>
+                    <span className="font-medium text-gray-700">Receipt Amount:</span>
+                    <span className="ml-2 text-gray-900">${req.receipt_metadata.total_amount}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
 
           {/* Finance Payment Management */}
           {isFinance && req.status === 'approved' && (

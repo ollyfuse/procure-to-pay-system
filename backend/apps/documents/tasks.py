@@ -120,3 +120,57 @@ def process_proforma_document(self, request_id: str, file_path: str):
             raise self.retry(countdown=60, exc=e)
         
         return {'success': False, 'error': str(e)}
+    
+
+@shared_task(bind=True, max_retries=3)
+def process_receipt_validation(self, request_id: str):
+    """Process receipt and validate against PO"""
+    try:
+        from apps.requests.models import PurchaseRequest
+        from .models import ReceiptMetadata
+        from .ai_service import ReceiptValidationService
+        
+        purchase_request = PurchaseRequest.objects.get(id=request_id)
+        
+        if not hasattr(purchase_request, 'purchase_order'):
+            return {'success': False, 'error': 'No PO found'}
+        
+        # Extract text from receipt
+        receipt_path = purchase_request.receipt_file.path
+        extraction_result = DocumentProcessor.extract_text_from_document(receipt_path)
+        
+        if not extraction_result['success']:
+            return {'success': False, 'error': extraction_result['error']}
+        
+        # Validate receipt
+        validator = ReceiptValidationService()
+        validation_result = validator.validate_receipt(
+            extraction_result['text'], 
+            purchase_request.purchase_order
+        )
+        
+        # Save results
+        receipt_metadata, created = ReceiptMetadata.objects.get_or_create(
+            request=purchase_request,
+            defaults={'validation_status': ReceiptMetadata.ValidationStatus.PENDING}
+        )
+        
+        if validation_result['success']:
+            data = validation_result['receipt_data']
+            receipt_metadata.vendor_name = data.get('vendor_name', '')
+            receipt_metadata.total_amount = data.get('total_amount')
+            receipt_metadata.currency = data.get('currency', '')
+            receipt_metadata.items = data.get('items', [])
+            receipt_metadata.validation_status = validation_result['validation_status']
+            receipt_metadata.discrepancies = validation_result['discrepancies']
+            receipt_metadata.confidence_score = validation_result['confidence']
+        else:
+            receipt_metadata.validation_status = ReceiptMetadata.ValidationStatus.FAILED
+        
+        receipt_metadata.save()
+        
+        return {'success': True, 'validation_status': receipt_metadata.validation_status}
+        
+    except Exception as e:
+        logger.error(f"Receipt validation failed: {str(e)}")
+        return {'success': False, 'error': str(e)}

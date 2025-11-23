@@ -79,4 +79,20 @@ export interface PurchaseRequest {
   approvals: Approval[];
   proforma_metadata?: ProformaMetadata;
   is_locked: boolean;
+  receipt_metadata?: ReceiptMetadata;
+}
+export interface ReceiptMetadata {
+  id: string;
+  vendor_name: string;
+  total_amount?: number;
+  currency: string;
+  items: any[];
+  validation_status: 'pending' | 'valid' | 'discrepancy' | 'failed';
+  discrepancies: Array<{
+    type: string;
+    expected: any;
+    actual: any;
+  }>;
+  confidence_score?: number;
+  created_at: string;
 }
