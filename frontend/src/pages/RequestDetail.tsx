@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { requestService } from '../services/requests';
 import type { PurchaseRequest } from '../types';
+import { POReceiptComparison, DocumentProcessingStatus } from '../components';
 import { 
   StatusBadge, 
   Upload, 
@@ -302,40 +303,7 @@ export const RequestDetail: React.FC = () => {
 
           {/* Extracted Metadata */}
           {req.proforma_metadata && (
-            <div className="card">
-              <h3 className="font-semibold text-gray-900 mb-4">Extracted Data</h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Status:</span>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                    req.proforma_metadata.extraction_status === 'success' 
-                      ? 'bg-green-100 text-green-800'
-                      : req.proforma_metadata.extraction_status === 'failed'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {req.proforma_metadata.extraction_status}
-                  </span>
-                </div>
-                {req.proforma_metadata.vendor_name && (
-                  <div>
-                    <span className="font-medium text-gray-700">Vendor:</span>
-                    <span className="ml-2 text-gray-900">{req.proforma_metadata.vendor_name}</span>
-                  </div>
-                )}
-                {req.proforma_metadata.total_amount && (
-                  <div>
-                    <span className="font-medium text-gray-700">Amount:</span>
-                    <span className="ml-2 text-gray-900">${req.proforma_metadata.total_amount}</span>
-                  </div>
-                )}
-                {req.proforma_metadata.error_message && (
-                  <div className="text-red-600 text-xs">
-                    Error: {req.proforma_metadata.error_message}
-                  </div>
-                )}
-              </div>
-            </div>
+            <DocumentProcessingStatus metadata={req.proforma_metadata} />
           )}
           {/* Receipt Validation Results */}
           {req.receipt_metadata && (
@@ -434,6 +402,77 @@ export const RequestDetail: React.FC = () => {
               </div>
             </div>
           )}
+          {/* Purchase Order Document - NEW */}
+          {req.purchase_order && (
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-4">Purchase Order</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">PO Number:</span>
+                  <span className="text-gray-900">{req.purchase_order.po_number}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Vendor:</span>
+                  <span className="text-gray-900">{req.purchase_order.vendor_name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Total:</span>
+                  <span className="text-gray-900">${req.purchase_order.total_amount}</span>
+                </div>
+                {req.purchase_order.po_document && (
+                  <a
+                    href={req.purchase_order.po_document}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary text-sm"
+                  >
+                    📄 Download PO
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        {/* PO-Receipt Comparison - ENHANCED DEBUG */}
+{req.purchase_order && req.receipt_metadata ? (
+  <POReceiptComparison 
+    purchaseOrder={req.purchase_order}
+    receiptMetadata={req.receipt_metadata}
+  />
+) : req.purchase_order && req.receipt_submitted ? (
+  <div className="card">
+    <h3 className="font-semibold text-gray-900 mb-4">Receipt Processing Status</h3>
+    <div className="text-sm space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></span>
+        <span>Receipt is being processed by AI...</span>
+      </div>
+      <div className="text-gray-600">
+        The receipt has been uploaded but AI processing is still in progress or failed.
+        Please refresh the page in a few moments.
+      </div>
+      <button 
+        onClick={load}
+        className="btn-secondary text-sm"
+      >
+        🔄 Refresh Status
+      </button>
+    </div>
+  </div>
+) : (
+  <div className="card">
+    <h3 className="font-semibold text-gray-900 mb-4">Debug Info</h3>
+    <div className="text-sm space-y-2">
+      <div>Has PO: {req.purchase_order ? 'YES' : 'NO'}</div>
+      <div>Has Receipt Metadata: {req.receipt_metadata ? 'YES' : 'NO'}</div>
+      <div>Receipt Submitted: {req.receipt_submitted ? 'YES' : 'NO'}</div>
+      <div>Payment Status: {req.payment_status}</div>
+      {req.purchase_order && (
+        <div>PO Number: {req.purchase_order.po_number}</div>
+      )}
+    </div>
+  </div>
+)}
+
         </div>
       </div>
     </div>

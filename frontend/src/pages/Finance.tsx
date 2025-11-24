@@ -42,13 +42,26 @@ export const Finance: React.FC = () => {
   }, [statusFilter, searchParams]);
 
   const getStats = () => {
-    const allApproved = requests; // This would need to be all approved requests, not filtered
     return {
-      awaiting_review: allApproved.filter(r => r.payment_status === 'pending').length,
-      paid: allApproved.filter(r => r.payment_status === 'paid').length,
-      on_hold: allApproved.filter(r => r.payment_status === 'on_hold').length,
-      missing_receipts: allApproved.filter(r => 
+      awaiting_review: requests.filter(r => r.payment_status === 'pending').length,
+      paid: requests.filter(r => r.payment_status === 'paid').length,
+      on_hold: requests.filter(r => r.payment_status === 'on_hold').length,
+      missing_receipts: requests.filter(r => 
         r.payment_status === 'paid' && !r.receipt_submitted && r.receipt_required
+      ).length
+    };
+  };
+
+  const getProcessingStats = () => {
+    return {
+      successful_extractions: requests.filter(r => 
+        r.proforma_metadata?.extraction_status === 'success'
+      ).length,
+      failed_extractions: requests.filter(r => 
+        r.proforma_metadata?.extraction_status === 'failed'
+      ).length,
+      pending_validations: requests.filter(r => 
+        r.receipt_submitted && r.receipt_metadata?.validation_status === 'pending'
       ).length
     };
   };
@@ -91,7 +104,7 @@ export const Finance: React.FC = () => {
   }
 
   const stats = getStats();
-  const totalValue = requests.reduce((sum, req) => sum + parseFloat(req.total_amount), 0);
+  const processingStats = getProcessingStats();
 
   return (
     <div className="space-y-6">
@@ -103,7 +116,7 @@ export const Finance: React.FC = () => {
       </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <Link to="/finance?status=awaiting_review" className="card hover:shadow-lg transition-shadow">
           <div className="text-2xl font-bold text-blue-600">{stats.awaiting_review}</div>
           <div className="text-sm text-gray-600">Awaiting Review</div>
@@ -120,6 +133,14 @@ export const Finance: React.FC = () => {
           <div className="text-2xl font-bold text-purple-600">{stats.missing_receipts}</div>
           <div className="text-sm text-gray-600">Missing Receipts</div>
         </Link>
+        <div className="card hover:shadow-lg transition-shadow">
+          <div className="text-2xl font-bold text-blue-600">{processingStats.successful_extractions}</div>
+          <div className="text-sm text-gray-600">Successful AI Extractions</div>
+        </div>
+        <div className="card hover:shadow-lg transition-shadow">
+          <div className="text-2xl font-bold text-red-600">{processingStats.failed_extractions}</div>
+          <div className="text-sm text-gray-600">Failed Extractions</div>
+        </div>
       </div>
 
       {/* Requests Table */}
@@ -151,6 +172,9 @@ export const Finance: React.FC = () => {
                     Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Purchase Order
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Payment Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -177,6 +201,13 @@ export const Finance: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ${request.total_amount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {request.purchase_order ? (
+                        <span className="text-green-600">{request.purchase_order.po_number}</span>
+                      ) : (
+                        <span className="text-gray-400">Not Generated</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getPaymentStatusBadge(request.payment_status)}

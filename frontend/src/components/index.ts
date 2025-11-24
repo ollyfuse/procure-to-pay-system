@@ -8,3 +8,5 @@ export { DocumentViewer } from './DocumentViewer';
 export { ReceiptUpload } from './ReceiptUpload';
 export { PaymentManager } from './PaymentManager';
 export { ClarificationManager } from './ClarificationManager';
+export { POReceiptComparison } from './POReceiptComparison';
+export { DocumentProcessingStatus } from './DocumentProcessingStatus';

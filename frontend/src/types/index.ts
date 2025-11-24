@@ -80,6 +80,7 @@ export interface PurchaseRequest {
   proforma_metadata?: ProformaMetadata;
   is_locked: boolean;
   receipt_metadata?: ReceiptMetadata;
+  purchase_order?: PurchaseOrder;
 }
 export interface ReceiptMetadata {
   id: string;
@@ -95,4 +96,18 @@ export interface ReceiptMetadata {
   }>;
   confidence_score?: number;
   created_at: string;
+}
+export interface PurchaseOrder {
+  id: string;
+  po_number: string;
+  vendor_name: string;
+  total_amount: string;
+  items: Array<{
+    description: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+  }>;
+  created_at: string;
+  po_document?: string;
 }

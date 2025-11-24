@@ -107,57 +107,44 @@ If any field cannot be found, use empty string for text fields, null for numbers
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse AI response and extract JSON"""
         try:
-            # Remove markdown code blocks if present
+            # Extract JSON from markdown code blocks
             if '```json' in response:
                 start = response.find('```json') + 7
                 end = response.find('```', start)
                 json_str = response[start:end].strip()
+            elif '```' in response:
+                start = response.find('```') + 3
+                end = response.find('```', start)
+                json_str = response[start:end].strip()
             else:
-                # Try to find JSON in the response
                 start = response.find('{')
                 end = response.rfind('}') + 1
-                if start != -1 and end != -1:
+                if start != -1 and end > start:
                     json_str = response[start:end]
                 else:
-                    json_str = response
+                    json_str = response.strip()
             
-            # Debug: Log the extracted JSON before processing
-            logger.info(f"Extracted JSON before processing: {json_str[:200]}...")
-            
-            # Decode HTML entities first
+            # Clean HTML entities and normalize quotes
             import html
             json_str = html.unescape(json_str)
             
-            # Debug: Log after HTML decode
-            logger.info(f"After HTML decode: {json_str[:200]}...")
+            # Remove any BOM or invisible characters at the start
+            json_str = json_str.lstrip('\ufeff\u200b\u00a0')
             
-            # Fix invalid escape sequences
-            import re 
-            json_str = re.sub(r'\\(?!["\\/bfnrt])', r'\\\\', json_str)
-            
-            # Clean up the JSON string - but be more careful with newlines
-            # Don't double-escape already escaped newlines
-            if '\\n' not in json_str:
-                json_str = json_str.replace('\n', '\\n')
-            if '\\r' not in json_str:
-                json_str = json_str.replace('\r', '\\r')
-            if '\\t' not in json_str:
-                json_str = json_str.replace('\t', '\\t')
-            
-            # Remove any stray characters that might have been inserted
-            json_str = re.sub(r'}\s*[a-zA-Z]+\s*,', '},', json_str)
-            
-            # Debug: Log final JSON before parsing
-            logger.info(f"Final JSON before parsing: {json_str[:200]}...")
+            # Normalize quotes - ensure all quotes are standard double quotes
+            json_str = json_str.replace('"', '"').replace('"', '"')
             
             return json.loads(json_str)
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
-            logger.error(f"Response was: {response}")
+            logger.error(f"Cleaned JSON string: {repr(json_str[:200])}")
+            return {}
+        except Exception as e:
+            logger.error(f"Unexpected error parsing AI response: {e}")
             return {}
 
-    
+
     def _calculate_confidence(self, data: ProformaData) -> float:
         """Calculate confidence score based on extracted data completeness"""
         score = 0.0

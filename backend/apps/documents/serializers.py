@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ProformaMetadata
+from .models import ProformaMetadata, ReceiptMetadata
 
 class ProformaMetadataSerializer(serializers.ModelSerializer):
     extraction_status_display = serializers.CharField(source='get_extraction_status_display', read_only=True)
@@ -14,6 +14,20 @@ class ProformaMetadataSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'extraction_status', 'confidence_score', 'error_message',
             'created_at', 'updated_at'
+        ]
+
+class ReceiptMetadataSerializer(serializers.ModelSerializer):
+    validation_status_display = serializers.CharField(source='get_validation_status_display', read_only=True)
+    
+    class Meta:
+        model = ReceiptMetadata
+        fields = [
+            'id', 'vendor_name', 'total_amount', 'currency', 'items',
+            'validation_status', 'validation_status_display', 'discrepancies',
+            'confidence_score', 'created_at'
+        ]
+        read_only_fields = [
+            'id', 'validation_status', 'discrepancies', 'confidence_score', 'created_at'
         ]
 
 class ProformaUploadSerializer(serializers.Serializer):

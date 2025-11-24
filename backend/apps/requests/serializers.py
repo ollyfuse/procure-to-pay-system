@@ -2,7 +2,9 @@ from rest_framework import serializers
 from .models import PurchaseRequest, RequestItem
 from apps.approvals.serializers import ApprovalSerializer
 from apps.po.models import PurchaseOrder
-from apps.documents.serializers import ProformaMetadataSerializer
+from apps.documents.serializers import ProformaMetadataSerializer, ReceiptMetadataSerializer
+
+
 
 class RequestItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +24,7 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
     approvals = ApprovalSerializer(many=True, read_only=True)
     purchase_order = PurchaseOrderSerializer(read_only=True)
     proforma_metadata = ProformaMetadataSerializer(read_only=True)
+    receipt_metadata = ReceiptMetadataSerializer(read_only=True)
     
     # Computed fields
     is_locked = serializers.BooleanField(read_only=True)
@@ -43,12 +46,12 @@ class PurchaseRequestSerializer(serializers.ModelSerializer):
             'payment_status', 'receipt_required', 'receipt_submitted',
             'clarification_requested', 'clarification_message', 'clarification_response',
             'version', 'created_at', 'updated_at', 'items', 'approvals',
-            'purchase_order', 'proforma_metadata', 'is_locked', 'next_approval_level', 'is_fully_approved'
+            'purchase_order', 'proforma_metadata','receipt_metadata', 'is_locked', 'next_approval_level', 'is_fully_approved'
         ]
         read_only_fields = [
             'id', 'status', 'created_by', 'created_by_username',
             'purchase_order_file', 'version', 'created_at', 'updated_at',
-            'approvals', 'purchase_order', 'proforma_metadata', 'is_locked', 
+            'approvals', 'purchase_order', 'proforma_metadata','receipt_metadata', 'is_locked', 
             'next_approval_level', 'is_fully_approved', 'proforma_file_url',
             'receipt_file_url', 'payment_proof_url'
         ]
