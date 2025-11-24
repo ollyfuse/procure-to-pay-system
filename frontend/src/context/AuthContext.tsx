@@ -68,7 +68,7 @@ const value: AuthContextType = {
   user,
   login,
   logout,
-  updateUser,  // Now this will work
+  updateUser,  
   isAuthenticated: !!user,
   isStaff: user?.role === 'staff',
   isApprover: user?.role?.includes('approver') || false,

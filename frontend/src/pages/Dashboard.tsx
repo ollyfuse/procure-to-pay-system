@@ -1,4 +1,3 @@
-// Enhanced Dashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService } from '../services/dashboard';
@@ -8,7 +7,12 @@ import {
   BanknotesIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  ReceiptPercentIcon
+  ReceiptPercentIcon,
+  ClockIcon,
+  PlusIcon,
+  ArrowTrendingUpIcon,
+  ChartBarIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 
@@ -41,208 +45,257 @@ export const Dashboard: React.FC = () => {
   }, [isStaff, isApprover, isFinance]);
 
   const getWelcomeMessage = () => {
-    const firstName = user?.first_name || user?.username;
     switch (user?.role) {
       case 'staff':
-        return `Welcome back, ${firstName}! Track your requests and submit receipts.`;
+        return `Track your requests and submit receipts`;
       case 'approver_level_1':
-        return `Welcome back, ${firstName}! You have requests awaiting your approval.`;
+        return `Review and approve pending requests`;
       case 'approver_level_2':
-        return `Welcome back, ${firstName}! Final approvals await your decision.`;
+        return `Final approvals await your decision`;
       case 'finance':
-        return `Welcome back, ${firstName}! Manage payments and validate receipts.`;
+        return `Manage payments and validate receipts`;
       default:
-        return `Welcome back, ${firstName}!`;
+        return `Welcome to your dashboard`;
     }
   };
 
+  const StatCard = ({ title, value, icon: Icon, color, href, priority = false }: any) => (
+    <Link 
+      to={href} 
+      className={`group bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 ${
+        priority ? 'ring-2 ring-blue-500 ring-opacity-20' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-2 sm:p-3 rounded-xl ${color} group-hover:scale-110 transition-transform duration-200 flex-shrink-0`}>
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        </div>
+      </div>
+    </Link>
+  );
+
+  const QuickActionCard = ({ title, description, buttonText, buttonIcon: ButtonIcon, href, color }: any) => (
+    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+          <p className="text-sm text-gray-600">{description}</p>
+        </div>
+        <Link 
+          to={href} 
+          className={`inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 ${color} text-white font-medium rounded-lg hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base w-full sm:w-auto`}
+        >
+          <ButtonIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          {buttonText}
+        </Link>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-          <p className="text-teal-100">Loading...</p>
+      <div className="space-y-6 sm:space-y-8">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 sm:p-8">
+          <div className="animate-pulse">
+            <div className="h-6 sm:h-8 bg-blue-500 rounded w-48 mb-3"></div>
+            <div className="h-3 sm:h-4 bg-blue-400 rounded w-64"></div>
+          </div>
+        </div>
+        
+        {/* Cards Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 animate-pulse">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-16 sm:w-24 mb-2"></div>
+                  <div className="h-6 sm:h-8 bg-gray-200 rounded w-12 sm:w-16"></div>
+                </div>
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-200 rounded-xl"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-        <p className="text-teal-100">{getWelcomeMessage()}</p>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.first_name || user?.username}!
+              </h1>
+              <p className="text-blue-100 text-base sm:text-lg">{getWelcomeMessage()}</p>
+            </div>
+            <div className="flex items-center space-x-2 text-blue-100">
+              <ChartBarIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-xs sm:text-sm font-medium">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Staff Dashboard */}
       {isStaff && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/requests?status=pending" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-orange-500 text-white mr-4">
-                <DocumentTextIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.pending_requests.length}</div>
-                <div className="text-sm text-gray-600">Pending Requests</div>
-              </div>
-            </div>
-          </Link>
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <StatCard
+              title="Pending"
+              value={stats.pending_requests.length}
+              icon={ClockIcon}
+              color="bg-gradient-to-br from-orange-500 to-orange-600"
+              href="/requests?status=pending"
+              priority={stats.pending_requests.length > 0}
+            />
+            <StatCard
+              title="Approved"
+              value={stats.approved_requests.length}
+              icon={CheckCircleIcon}
+              color="bg-gradient-to-br from-green-500 to-green-600"
+              href="/requests?status=approved"
+            />
+            <StatCard
+              title="Rejected"
+              value={stats.rejected_requests.length}
+              icon={ExclamationTriangleIcon}
+              color="bg-gradient-to-br from-red-500 to-red-600"
+              href="/requests?status=rejected"
+            />
+            <StatCard
+              title="Receipts Due"
+              value={stats.receipts_pending.length}
+              icon={ReceiptPercentIcon}
+              color="bg-gradient-to-br from-purple-500 to-purple-600"
+              href="/requests?receipts_pending=true"
+              priority={stats.receipts_pending.length > 0}
+            />
+          </div>
 
-          <Link to="/requests?status=approved" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-green-500 text-white mr-4">
-                <CheckCircleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.approved_requests.length}</div>
-                <div className="text-sm text-gray-600">Approved Requests</div>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/requests?status=rejected" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-red-500 text-white mr-4">
-                <ExclamationTriangleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.rejected_requests.length}</div>
-                <div className="text-sm text-gray-600">Rejected Requests</div>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/requests?receipts_pending=true" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-purple-500 text-white mr-4">
-                <ReceiptPercentIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.receipts_pending.length}</div>
-                <div className="text-sm text-gray-600">Receipts Pending</div>
-              </div>
-            </div>
-          </Link>
-        </div>
+          <QuickActionCard
+            title="Ready to create a new request?"
+            description="Start your procurement process with a few clicks"
+            buttonText="Create Request"
+            buttonIcon={PlusIcon}
+            href="/requests/new"
+            color="bg-blue-600 hover:bg-blue-700"
+          />
+        </>
       )}
 
       {/* Approver Dashboard */}
       {isApprover && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link to="/approvals" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-orange-500 text-white mr-4">
-                <ClipboardDocumentCheckIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.waiting_for_approval.length}</div>
-                <div className="text-sm text-gray-600">Waiting for My Approval</div>
-              </div>
-            </div>
-          </Link>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <StatCard
+              title="Awaiting Approval"
+              value={stats.waiting_for_approval.length}
+              icon={ClipboardDocumentCheckIcon}
+              color="bg-gradient-to-br from-orange-500 to-orange-600"
+              href="/approvals"
+              priority={stats.waiting_for_approval.length > 0}
+            />
+            <StatCard
+              title="Approved by Me"
+              value={stats.approved_by_me.length}
+              icon={CheckCircleIcon}
+              color="bg-gradient-to-br from-green-500 to-green-600"
+              href="/approvals/history?action=approved"
+            />
+            <StatCard
+              title="Rejected by Me"
+              value={stats.rejected_by_me.length}
+              icon={ExclamationTriangleIcon}
+              color="bg-gradient-to-br from-red-500 to-red-600"
+              href="/approvals/history?action=rejected"
+            />
+          </div>
 
-          <Link to="/approval-history?action=approved" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-green-500 text-white mr-4">
-                <CheckCircleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.approved_by_me.length}</div>
-                <div className="text-sm text-gray-600">Approved by Me</div>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/approval-history?action=rejected" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-red-500 text-white mr-4">
-                <ExclamationTriangleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.rejected_by_me.length}</div>
-                <div className="text-sm text-gray-600">Rejected by Me</div>
-              </div>
-            </div>
-          </Link>
-        </div>
+          <QuickActionCard
+            title="Pending approvals need your attention"
+            description="Review and approve requests efficiently"
+            buttonText="Review Approvals"
+            buttonIcon={ClipboardDocumentCheckIcon}
+            href="/approvals"
+            color="bg-orange-600 hover:bg-orange-700"
+          />
+        </>
       )}
 
-      {/* Finance Dashboard */}
+      {/* Finance Dashboard - Simplified */}
       {isFinance && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/finance?status=awaiting_review" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-blue-500 text-white mr-4">
-                <BanknotesIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.awaiting_finance_review.length}</div>
-                <div className="text-sm text-gray-600">Awaiting Review</div>
-              </div>
-            </div>
-          </Link>
+        <>
+          {/* Priority Cards - Mobile: 2 columns, Desktop: 4 columns */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <StatCard
+              title="Review Needed"
+              value={stats.awaiting_finance_review.length}
+              icon={BanknotesIcon}
+              color="bg-gradient-to-br from-blue-500 to-blue-600"
+              href="/finance?status=awaiting_review"
+              priority={stats.awaiting_finance_review.length > 0}
+            />
+            <StatCard
+              title="Missing Receipts"
+              value={stats.missing_receipts.length}
+              icon={ReceiptPercentIcon}
+              color="bg-gradient-to-br from-red-500 to-red-600"
+              href="/finance?missing_receipts=true"
+              priority={stats.missing_receipts.length > 0}
+            />
+            <StatCard
+              title="Paid"
+              value={stats.paid_requests.length}
+              icon={CheckCircleIcon}
+              color="bg-gradient-to-br from-green-500 to-green-600"
+              href="/finance?status=paid"
+            />
+            <StatCard
+              title="On Hold"
+              value={stats.on_hold_requests.length}
+              icon={ExclamationTriangleIcon}
+              color="bg-gradient-to-br from-yellow-500 to-yellow-600"
+              href="/finance?status=on_hold"
+            />
+          </div>
 
-          <Link to="/finance?status=paid" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-green-500 text-white mr-4">
-                <CheckCircleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.paid_requests.length}</div>
-                <div className="text-sm text-gray-600">Paid Requests</div>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/finance?status=on_hold" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-yellow-500 text-white mr-4">
-                <ExclamationTriangleIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.on_hold_requests.length}</div>
-                <div className="text-sm text-gray-600">On Hold</div>
-              </div>
-            </div>
-          </Link>
-
-          <Link to="/finance?missing_receipts=true" className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-red-500 text-white mr-4">
-                <ReceiptPercentIcon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.missing_receipts.length}</div>
-                <div className="text-sm text-gray-600">Missing Receipts</div>
-              </div>
-            </div>
-          </Link>
-        </div>
+          {/* Quick Actions - Consolidated */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <QuickActionCard
+              title="Process Payments"
+              description="Review and process pending payments"
+              buttonText="Manage Payments"
+              buttonIcon={BanknotesIcon}
+              href="/finance?status=awaiting_review"
+              color="bg-green-600 hover:bg-green-700"
+            />
+            <QuickActionCard
+              title="View All Finance"
+              description="Complete overview of financial operations"
+              buttonText="View All"
+              buttonIcon={EyeIcon}
+              href="/finance"
+              color="bg-blue-600 hover:bg-blue-700"
+            />
+          </div>
+        </>
       )}
-
-      {/* Quick Actions */}
-      <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {isStaff && (
-            <Link to="/requests/new" className="btn-primary text-center">
-              Create New Request
-            </Link>
-          )}
-          {isApprover && (
-            <Link to="/approvals" className="btn-primary text-center">
-              Review Pending Approvals
-            </Link>
-          )}
-          {isFinance && (
-            <Link to="/finance" className="btn-primary text-center">
-              Manage Payments
-            </Link>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

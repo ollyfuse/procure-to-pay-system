@@ -18,9 +18,7 @@ export const DocumentProcessingStatus: React.FC<DocumentProcessingStatusProps> =
   const confidencePercentage = Math.round((metadata.confidence_score || 0) * 100);
 
   return (
-    <div className="card">
-      <h3 className="font-semibold text-gray-900 mb-4">AI Processing Status</h3>
-      
+    <div>
       <div className="space-y-4">
         {/* Status */}
         <div className="flex items-center justify-between">
@@ -65,7 +63,7 @@ export const DocumentProcessingStatus: React.FC<DocumentProcessingStatusProps> =
 
         {/* Error Message */}
         {metadata.error_message && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 bg-red-50 border border-red-200 sm:rounded-lg">
             <p className="text-sm text-red-700">{metadata.error_message}</p>
           </div>
         )}

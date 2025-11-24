@@ -3,10 +3,20 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
 import toast from 'react-hot-toast';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  UserIcon,
+  LockClosedIcon,
+  ArrowRightIcon,
+  BuildingOfficeIcon,
+  ClipboardDocumentIcon
+} from '@heroicons/react/24/outline';
 
 export const Login: React.FC = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { isAuthenticated, login } = useAuth();
 
   if (isAuthenticated) {
@@ -24,7 +34,7 @@ export const Login: React.FC = () => {
         login(result.user, localStorage.getItem('access_token')!);
         toast.success(`Welcome back, ${result.user.first_name}!`);
       } else {
-        toast.error(result.error || 'Login failed');
+        toast.error(result.error || 'Invalid credentials');
       }
     } catch (error) {
       toast.error('Connection error. Please try again.');
@@ -40,108 +50,139 @@ export const Login: React.FC = () => {
     }));
   };
 
-  const quickLogin = (username: string, password: string) => {
+  const copyCredentials = (username: string, password: string) => {
     setCredentials({ username, password });
+    toast.success('Credentials filled');
   };
 
+  const demoAccounts = [
+    { role: 'Staff', username: 'staff_user', password: 'testpass123' },
+    { role: 'Approver', username: 'approver_l1', password: 'testpass123' },
+    { role: 'Approver L2', username: 'approver_l2', password: 'testpass123' },
+    { role: 'Finance', username: 'finance_user', password: 'testpass123' }
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="mx-auto mb-4 h-14 w-14 rounded-xl bg-teal-500 flex items-center justify-center shadow-md">
-          <span className="text-white text-2xl">🏢</span>
-        </div>
-        <h1 className="text-3xl font-semibold text-gray-800">Procure-to-Pay</h1>
-        <p className="text-gray-500 mt-1">Enterprise procurement management system</p>
-      </div>
-
-      {/* Login Card */}
-      <div className="w-full max-w-lg bg-white shadow-md rounded-2xl p-8 mb-12">
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Sign In</h2>
-        <p className="text-gray-500 text-sm mb-6">Enter your credentials to continue</p>
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-gray-600 text-sm mb-1">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={credentials.username}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-xl p-3 text-gray-700 focus:ring-2 focus:ring-teal-500 focus:outline-none"
-              placeholder="Enter your username"
-              required
-            />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg mb-6">
+            <BuildingOfficeIcon className="w-8 h-8 text-white" />
           </div>
-
-          <div>
-            <label className="block text-gray-600 text-sm mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-xl p-3 text-gray-700 focus:ring-2 focus:ring-teal-500 focus:outline-none"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-teal-600 text-white p-3 rounded-xl font-medium hover:bg-teal-700 transition disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-      </div>
-
-      {/* Role Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-        {/* Staff */}
-        <div className="bg-white rounded-2xl shadow-md p-6 text-center border-t-4 border-teal-500">
-          <div className="mx-auto h-12 w-12 mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-600 text-xl">📄</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700">Staff</h3>
-          <p className="text-gray-500 text-sm mb-4">Create and track purchase requests</p>
-          <button 
-            onClick={() => quickLogin('staff_user', 'testpass123')}
-            className="w-full border border-gray-300 rounded-xl p-2 hover:bg-gray-100 transition text-gray-700"
-          >
-            Continue as Staff
-          </button>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Procure-to-Pay</h1>
+          <p className="text-gray-600">Sign in to your account</p>
         </div>
 
-        {/* Approver */}
-        <div className="bg-white rounded-2xl shadow-md p-6 text-center border-t-4 border-orange-500">
-          <div className="mx-auto h-12 w-12 mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-600 text-xl">🛡️</span>
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Username Field */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  value={credentials.username}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your username"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={credentials.password}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-50 rounded-r-xl transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading || !credentials.username || !credentials.password}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Signing in...
+                </div>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRightIcon className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
+            <div className="space-y-2">
+              {demoAccounts.map((account) => (
+                <button
+                  key={account.role}
+                  onClick={() => copyCredentials(account.username, account.password)}
+                  className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{account.role}</p>
+                    <p className="text-xs text-gray-500">{account.username}</p>
+                  </div>
+                  <ClipboardDocumentIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                </button>
+              ))}
+            </div>
           </div>
-          <h3 className="text-lg font-semibold text-gray-700">Approver</h3>
-          <p className="text-gray-500 text-sm mb-4">Review and approve requests</p>
-          <button 
-            onClick={() => quickLogin('approver_l1', 'testpass123')}
-            className="w-full border border-gray-300 rounded-xl p-2 hover:bg-gray-100 transition text-gray-700"
-          >
-            Continue as Approver
-          </button>
         </div>
 
-        {/* Finance */}
-        <div className="bg-white rounded-2xl shadow-md p-6 text-center border-t-4 border-green-500">
-          <div className="mx-auto h-12 w-12 mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-600 text-xl">📑</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700">Finance</h3>
-          <p className="text-gray-500 text-sm mb-4">Manage POs and validate receipts</p>
-          <button 
-            onClick={() => quickLogin('finance_user', 'testpass123')}
-            className="w-full border border-gray-300 rounded-xl p-2 hover:bg-gray-100 transition text-gray-700"
-          >
-            Continue as Finance
-          </button>
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            © 2025 Procure-to-Pay System. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

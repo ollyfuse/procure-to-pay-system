@@ -10,12 +10,12 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url }) => {
 
   if (isPdf) {
     return (
-      <div className="border rounded-lg p-4 text-center">
+      <div className="border sm:rounded-lg p-4 text-center bg-gray-50">
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-teal-600 hover:text-teal-700 underline"
+          className="text-teal-600 hover:text-teal-700 underline font-medium"
         >
           📄 View PDF Document
         </a>
@@ -25,7 +25,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url }) => {
 
   if (isImage) {
     return (
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border sm:rounded-lg overflow-hidden bg-gray-50">
         <img
           src={url}
           alt="Document"
@@ -36,12 +36,12 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ url }) => {
   }
 
   return (
-    <div className="border rounded-lg p-4 text-center text-gray-500">
+    <div className="border sm:rounded-lg p-4 text-center text-gray-500 bg-gray-50">
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-teal-600 hover:text-teal-700 underline"
+        className="text-teal-600 hover:text-teal-700 underline font-medium"
       >
         📄 View Document
       </a>

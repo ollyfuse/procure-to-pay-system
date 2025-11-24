@@ -22,3 +22,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer for profile updates - allows updating name and email"""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'approver_level']
+        read_only_fields = ['id', 'username', 'role', 'approver_level']

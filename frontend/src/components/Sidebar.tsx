@@ -5,210 +5,252 @@ import {
   HomeIcon,
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
-  BanknotesIcon,
   PlusIcon,
-  UserCircleIcon,
-  ArrowRightOnRectangleIcon,
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
   ReceiptPercentIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
-export const Sidebar: React.FC = () => {
-  const { user, isStaff, isApprover, isFinance, logout } = useAuth();
+interface SidebarProps {
+  onClose: () => void;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  show: boolean;
+  highlight?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  show?: boolean;
+  items: NavItem[];
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+  const { isStaff, isApprover, isFinance, user } = useAuth();
   const location = useLocation();
 
-  const navItems = [
+  const navSections: NavSection[] = [
     {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: HomeIcon,
-      show: true,
+      title: 'Overview',
+      items: [
+        {
+          name: 'Dashboard',
+          href: '/dashboard',
+          icon: HomeIcon,
+          show: true,
+        },
+      ]
     },
-    // Staff Navigation - Categorized
     {
-      name: 'All Requests',
-      href: '/requests',
-      icon: DocumentTextIcon,
+      title: 'Requests',
       show: isStaff,
+      items: [
+        {
+          name: 'All Requests',
+          href: '/requests',
+          icon: DocumentTextIcon,
+          show: isStaff,
+        },
+        {
+          name: 'Create Request',
+          href: '/requests/new',
+          icon: PlusIcon,
+          show: isStaff,
+          highlight: true,
+        },
+        {
+          name: 'Pending',
+          href: '/requests?status=pending',
+          icon: ClockIcon,
+          show: isStaff,
+        },
+        {
+          name: 'Approved',
+          href: '/requests?status=approved',
+          icon: CheckCircleIcon,
+          show: isStaff,
+        },
+        {
+          name: 'Rejected',
+          href: '/requests?status=rejected',
+          icon: XCircleIcon,
+          show: isStaff,
+        },
+        {
+          name: 'Receipts Pending',
+          href: '/requests?receipts_pending=true',
+          icon: ReceiptPercentIcon,
+          show: isStaff,
+        },
+      ]
     },
     {
-      name: 'Pending Requests',
-      href: '/requests?status=pending',
-      icon: ClockIcon,
-      show: isStaff,
-    },
-    {
-      name: 'Approved Requests',
-      href: '/requests?status=approved',
-      icon: CheckCircleIcon,
-      show: isStaff,
-    },
-    {
-      name: 'Rejected Requests',
-      href: '/requests?status=rejected',
-      icon: XCircleIcon,
-      show: isStaff,
-    },
-    {
-      name: 'Receipts Pending',
-      href: '/requests?receipts_pending=true',
-      icon: ReceiptPercentIcon,
-      show: isStaff,
-    },
-    {
-      name: 'Create Request',
-      href: '/requests/new',
-      icon: PlusIcon,
-      show: isStaff,
-    },
-    // Approver Navigation - Enhanced
-    {
-      name: 'Waiting for My Approval',
-      href: '/approvals',
-      icon: ClipboardDocumentCheckIcon,
+      title: 'Approvals',
       show: isApprover,
+      items: [
+        {
+          name: 'Pending Approval',
+          href: '/approvals',
+          icon: ClipboardDocumentCheckIcon,
+          show: isApprover,
+          highlight: true,
+        },
+        {
+          name: 'Approved by Me',
+          href: '/approvals/history?action=approved',
+          icon: CheckCircleIcon,
+          show: isApprover,
+        },
+        {
+          name: 'Rejected by Me',
+          href: '/approvals/history?action=rejected',
+          icon: XCircleIcon,
+          show: isApprover,
+        },
+      ]
     },
     {
-      name: 'Approved by Me',
-      href: '/approvals/history?action=approved',
-      icon: CheckCircleIcon,
-      show: isApprover,
-    },
-    {
-      name: 'Rejected by Me',
-      href: '/approvals/history?action=rejected',
-      icon: XCircleIcon,
-      show: isApprover,
-    },
-    // Finance Navigation - Enhanced
-    {
-      name: 'Awaiting Finance Review',
-      href: '/finance?status=awaiting_review',
-      icon: ClockIcon,
+      title: 'Finance',
       show: isFinance,
-    },
-    {
-      name: 'Paid Requests',
-      href: '/finance?status=paid',
-      icon: CheckCircleIcon,
-      show: isFinance,
-    },
-    {
-      name: 'On Hold Requests',
-      href: '/finance?status=on_hold',
-      icon: XCircleIcon,
-      show: isFinance,
-    },
-    {
-      name: 'Missing Receipts',
-      href: '/finance?missing_receipts=true',
-      icon: ReceiptPercentIcon,
-      show: isFinance,
-    },
+      items: [
+        {
+          name: 'Awaiting Review',
+          href: '/finance?status=awaiting_review',
+          icon: ClockIcon,
+          show: isFinance,
+          highlight: true,
+        },
+        {
+          name: 'Paid Requests',
+          href: '/finance?status=paid',
+          icon: CheckCircleIcon,
+          show: isFinance,
+        },
+        {
+          name: 'On Hold',
+          href: '/finance?status=on_hold',
+          icon: XCircleIcon,
+          show: isFinance,
+        },
+        {
+          name: 'Missing Receipts',
+          href: '/finance?missing_receipts=true',
+          icon: ReceiptPercentIcon,
+          show: isFinance,
+        },
+      ]
+    }
   ];
-
 
   const isActiveLink = (href: string) => {
     const currentPath = location.pathname + location.search;
     return currentPath === href;
   };
 
-  const getRoleDisplay = (role: string) => {
-    const roleMap: Record<string, string> = {
-      'staff': 'Staff Member',
-      'approver_level_1': 'Level 1 Approver',
-      'approver_level_2': 'Level 2 Approver',
-      'finance': 'Finance Team'
-    };
-    return roleMap[role] || role;
-  };
-
-  const getRoleColor = (role: string) => {
-    const colorMap: Record<string, string> = {
-      'staff': 'bg-blue-100 text-blue-800',
-      'approver_level_1': 'bg-orange-100 text-orange-800',
-      'approver_level_2': 'bg-red-100 text-red-800',
-      'finance': 'bg-green-100 text-green-800'
-    };
-    return colorMap[role] || 'bg-gray-100 text-gray-800';
-  };
+  const userName = user?.first_name && user?.last_name 
+    ? `${user.first_name} ${user.last_name}`
+    : user?.username || 'User';
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-gray-200 min-h-screen flex flex-col">
-      {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center">
-          <div className="h-8 w-8 bg-teal-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P2P</span>
+    <aside className="h-full bg-gradient-to-br from-white to-gray-50 lg:bg-white lg:border-r lg:border-gray-200 flex flex-col shadow-2xl lg:shadow-none">
+      {/* Mobile Full-Screen Header */}
+      <div className="lg:hidden bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span className="text-white font-bold text-sm">P2P</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Procure-to-Pay</h1>
+              <p className="text-blue-100 text-sm">Purchase Management</p>
+            </div>
           </div>
-          <div className="ml-3">
-            <h1 className="text-lg font-semibold text-gray-900">Procure-to-Pay</h1>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-200"
+          >
+            <XMarkIcon className="h-6 w-6 text-white" />
+          </button>
+        </div>
+        
+        {/* User Info on Mobile */}
+        <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
+          <div className="flex items-center space-x-3">
+            <div className="h-12 w-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold text-lg">
+                {userName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="font-semibold text-white">{userName}</p>
+              <p className="text-blue-100 text-sm">{user?.email}</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        {navItems
-          .filter(item => item.show)
-          .map((item) => {
-            const isActive = isActiveLink(item.href);
-            return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                  isActive
-                    ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <item.icon 
-                  className={`h-5 w-5 mr-3 transition-colors duration-200 ${
-                    isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'
-                  }`} 
-                />
-                {item.name}
-              </NavLink>
-            );
-          })}
-      </nav>
-
-      {/* User Profile Section */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="bg-gray-50 rounded-lg p-4 mb-3">
-          <div className="flex items-center">
-            <div className="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <UserCircleIcon className="h-6 w-6 text-gray-600" />
-            </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.first_name && user?.last_name 
-                  ? `${user.first_name} ${user.last_name}`
-                  : user?.username
-                }
-              </p>
-              <div className="mt-1">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                  user?.role ? getRoleColor(user.role) : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {user?.role ? getRoleDisplay(user.role) : 'User'}
-                </span>
+      <nav className="flex-1 px-6 lg:px-4 py-6 space-y-6 overflow-y-auto">
+        {navSections
+          .filter(section => section.show !== false)
+          .map((section) => (
+            <div key={section.title}>
+              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                {section.title}
+              </h3>
+              <div className="space-y-2">
+                {section.items
+                  .filter(item => item.show)
+                  .map((item) => {
+                    const isActive = isActiveLink(item.href);
+                    return (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        onClick={onClose}
+                        className={`group flex items-center px-4 py-4 lg:py-3 text-base lg:text-sm font-medium rounded-2xl lg:rounded-xl transition-all duration-200 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-105 lg:scale-100'
+                            : item.highlight
+                            ? 'text-gray-900 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 hover:text-blue-700 hover:shadow-md'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                      >
+                        <item.icon 
+                          className={`h-6 w-6 lg:h-5 lg:w-5 mr-4 lg:mr-3 flex-shrink-0 transition-colors duration-200 ${
+                            isActive 
+                              ? 'text-white' 
+                              : item.highlight
+                              ? 'text-gray-700 group-hover:text-blue-600'
+                              : 'text-gray-400 group-hover:text-gray-600'
+                          }`} 
+                        />
+                        <span className="truncate flex-1 font-medium">{item.name}</span>
+                        {item.highlight && !isActive && (
+                          <div className="ml-3 h-2.5 w-2.5 bg-blue-600 rounded-full flex-shrink-0 animate-pulse"></div>
+                        )}
+                        {isActive && (
+                          <div className="ml-3 h-2 w-2 bg-white rounded-full flex-shrink-0"></div>
+                        )}
+                      </NavLink>
+                    );
+                  })}
               </div>
             </div>
-          </div>
-        </div>
+          ))}
+      </nav>
 
-        {/* Logout Button */}
-        <button
-          onClick={logout}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3 text-gray-400" />
-          Sign Out
-        </button>
+      {/* Mobile Footer */}
+      <div className="lg:hidden p-6 border-t border-gray-200 bg-gray-50">
+        <p className="text-center text-sm text-gray-500">
+          © 2025 Procure-to-Pay System
+        </p>
       </div>
     </aside>
   );

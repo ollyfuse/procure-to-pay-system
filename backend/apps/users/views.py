@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer, UserCreateSerializer
+from .serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
 
 User = get_user_model()
 
@@ -34,7 +34,11 @@ def register(request):
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """Get and update user profile"""
-    serializer_class = UserSerializer
+    
+    def get_serializer_class(self):
+        if self.request.method == 'PUT' or self.request.method == 'PATCH':
+            return UserProfileSerializer
+        return UserSerializer
     
     def get_object(self):
         return self.request.user
