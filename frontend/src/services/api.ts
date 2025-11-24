@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api'; // Proxy will handle this
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'http://13.53.39.8:8000/api'  // EC2 IP
+  : 'http://localhost:8000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -1,6 +1,6 @@
-import { User } from './types';
+import type { User } from './types';
 
-// This should work if User is properly exported
+
 const testUser: User = {
   id: '1',
   username: 'test',

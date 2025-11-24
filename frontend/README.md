@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# Procure-to-Pay Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern React TypeScript frontend for the procurement management system, featuring responsive design, role-based access control, and real-time document processing.
 
-Currently, two official plugins are available:
+## 🚀 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** - Latest React with concurrent features
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Client-side routing
+- **Axios** - HTTP client for API calls
+- **React Hot Toast** - Beautiful notifications
+- **Heroicons** - Beautiful SVG icons
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🔐 Authentication & Authorization
+- JWT token management with auto-refresh
+- Role-based route protection
+- Secure login with demo credentials
+- Automatic token expiration handling
 
-## Expanding the ESLint configuration
+### 📱 Responsive Design
+- Mobile-first approach
+- Responsive navigation and layouts
+- Touch-friendly interface
+- Optimized for all screen sizes
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 👥 Role-Based Dashboards
+- **Staff**: Create requests, upload documents, track status
+- **Approvers**: Review pending requests, approval history
+- **Finance**: Payment processing, receipt validation
+- Real-time status updates
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 📄 Document Management
+- Drag-and-drop file uploads
+- Real-time processing status
+- Document viewer with metadata
+- Receipt-to-PO comparison interface
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 🎨 Modern UI/UX
+- Clean, professional design
+- Smooth animations and transitions
+- Interactive components
+- Consistent design system
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🚀 Quick Start
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Prerequisites
+- Node.js 18+
+- npm or yarn
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Installation
+```bash
+# Install dependencies
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+###Project Structure
+src/
+├── components/          # Reusable UI components
+│   ├── Layout.tsx      # Main layout wrapper
+│   ├── Navbar.tsx      # Top navigation
+│   ├── Sidebar.tsx     # Side navigation
+│   ├── Upload.tsx      # File upload component
+│   └── ...
+├── pages/              # Route-based page components
+│   ├── Dashboard.tsx   # Role-based dashboard
+│   ├── Login.tsx       # Authentication page
+│   ├── Requests.tsx    # Request management
+│   └── ...
+├── services/           # API service layer
+│   ├── api.ts         # Base API configuration
+│   ├── auth.ts        # Authentication services
+│   ├── requests.ts    # Request management
+│   └── ...
+├── context/           # React context providers
+│   └── AuthContext.tsx # Authentication state
+├── types/             # TypeScript type definitions
+│   └── index.ts       # Shared types
+└── App.tsx            # Main application component
+

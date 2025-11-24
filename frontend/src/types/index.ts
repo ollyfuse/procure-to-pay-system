@@ -28,7 +28,7 @@ export interface RequestItem {
   description: string;
   quantity: number;
   unit_price: string;
-  total_price: string;
+  total_price?: string;
 }
 
 export interface Approval {

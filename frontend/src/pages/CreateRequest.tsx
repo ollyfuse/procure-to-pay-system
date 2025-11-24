@@ -8,13 +8,13 @@ import {
   ArrowLeftIcon,
   DocumentTextIcon,
   CurrencyDollarIcon,
-  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 interface RequestItem {
   description: string;
   quantity: number;
   unit_price: string;
+  total_price?: string;
 }
 
 export const CreateRequest: React.FC = () => {
@@ -90,12 +90,13 @@ export const CreateRequest: React.FC = () => {
         items: items
           .filter(item => item.description.trim() && parseFloat(item.unit_price) > 0)
           .map(item => ({
-            ...item,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
             total_price: calculateItemTotal(item)
           }))
       };
-
-      const newRequest = await requestService.createRequest(requestData);
+      const newRequest = await requestService.createRequest(requestData as any);
       toast.success('Purchase request created successfully!');
       navigate(`/requests/${newRequest.id}`);
     } catch (error: any) {

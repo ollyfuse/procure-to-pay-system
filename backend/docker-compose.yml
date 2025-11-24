@@ -30,7 +30,7 @@ services:
       - db
       - redis
     environment:
-      - DJANGO_SETTINGS_MODULE=backend.settings.local
+       - DJANGO_SETTINGS_MODULE=backend.settings.production
 
   celery:
     build: .
@@ -43,7 +43,7 @@ services:
       - db
       - redis
     environment:
-      - DJANGO_SETTINGS_MODULE=backend.settings.local
+       - DJANGO_SETTINGS_MODULE=backend.settings.production
 
 volumes:
   postgres_data:

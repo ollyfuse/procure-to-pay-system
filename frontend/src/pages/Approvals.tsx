@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { requestService } from '../services/requests';
-import { StatusBadge } from '../components';
 import type { PurchaseRequest } from '../types';
 import { DocumentTextIcon, EyeIcon } from '@heroicons/react/24/outline';
 

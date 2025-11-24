@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService } from '../services/dashboard';
 import { 
-  DocumentTextIcon, 
   ClipboardDocumentCheckIcon, 
   BanknotesIcon,
   CheckCircleIcon,
@@ -10,7 +9,6 @@ import {
   ReceiptPercentIcon,
   ClockIcon,
   PlusIcon,
-  ArrowTrendingUpIcon,
   ChartBarIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
