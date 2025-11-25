@@ -9,8 +9,7 @@ import {
   UserIcon,
   LockClosedIcon,
   ArrowRightIcon,
-  BuildingOfficeIcon,
-  ClipboardDocumentIcon
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 
 export const Login: React.FC = () => {
@@ -48,11 +47,6 @@ export const Login: React.FC = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
-  };
-
-  const copyCredentials = (username: string, password: string) => {
-    setCredentials({ username, password });
-    toast.success('Credentials filled');
   };
 
   return (
@@ -149,26 +143,6 @@ export const Login: React.FC = () => {
               )}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
-            <div className="space-y-2">
-              {demoAccounts.map((account) => (
-                <button
-                  key={account.role}
-                  onClick={() => copyCredentials(account.username, account.password)}
-                  className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{account.role}</p>
-                    <p className="text-xs text-gray-500">{account.username}</p>
-                  </div>
-                  <ClipboardDocumentIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
