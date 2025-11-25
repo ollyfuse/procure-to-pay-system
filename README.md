@@ -95,6 +95,8 @@ The system includes pre-configured demo accounts for testing:
 ### Purchase Orders
 - `GET /api/purchase-orders/` - List purchase orders
 - `GET /api/purchase-orders/{id}/` - PO details
+###
+- `http://13.53.39.8/api/docs/` - swagger api
 
 ## 🚀 Quick Start
 

@@ -55,13 +55,6 @@ export const Login: React.FC = () => {
     toast.success('Credentials filled');
   };
 
-  const demoAccounts = [
-    { role: 'Staff', username: 'staff_user', password: 'testpass123' },
-    { role: 'Approver', username: 'approver_l1', password: 'testpass123' },
-    { role: 'Approver L2', username: 'approver_l2', password: 'testpass123' },
-    { role: 'Finance', username: 'finance_user', password: 'testpass123' }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
