@@ -3,7 +3,7 @@ import dj_database_url
 
 # Security
 DEBUG = False
-ALLOWED_HOSTS = ['13.53.39.8', 'localhost']
+ALLOWED_HOSTS = ['13.53.39.8', 'localhost', 'procuretopays.netlify.app']
 
 # Database
 DATABASES = {
@@ -30,13 +30,17 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    'https://your-app.vercel.app',  # Will update after frontend deploy
+    'https://procuretopays.netlify.app', 
     'http://localhost:3000',  # For local dev
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
+
 # Celery
-CELERY_BROKER_URL = env('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://redis:6379/0')
+CELERY_TASK_ALWAYS_EAGER = env.bool('CELERY_TASK_ALWAYS_EAGER', default=False)
 
 # File storage (S3)
 if env.bool('USE_S3', default=False):
