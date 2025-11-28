@@ -22,10 +22,10 @@ function App() {
     if (!hasSeenNotice) {
       setTimeout(() => {
         toast.success(
-          "We apologize for the recent service down time. The system is now fully operational. Please note: API documentation has moved to http://16.171.30.43:8000/api/docs/. from the one I submitted in email. Thank you for your patience."
+          "I apologize for the recent service down time. The system is now fully operational. Please note: API documentation has moved to http://16.171.30.43:8000/api/docs/. from the one I submitted in email. Thank you for your patience."
 , 
           {
-            duration: 8000,
+            duration: 10000,
             style: {
               background: '#10B981',
               color: '#fff',

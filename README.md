@@ -5,7 +5,7 @@ A comprehensive enterprise procurement management system built with Django REST 
 ## 🌟 Live Demo
 
 - **Application**: [https://procuretopays.netlify.app](https://procuretopays.netlify.app)
-- **API Documentation**: [http://13.53.39.8/api/docs/](http://13.53.39.8/api/docs/)
+- **API Documentation**: [http://16.171.30.43/api/docs/](http://16.171.30.43/api/docs)
 -**GitHub repo**: [https://github.com/ollyfuse/procure-to-pay-system.git] (https://github.com/ollyfuse/procure-to-pay-system.git)
 
 ## 🏗️ Architecture
