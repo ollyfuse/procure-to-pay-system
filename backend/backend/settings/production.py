@@ -3,7 +3,7 @@ import dj_database_url
 
 # Security
 DEBUG = False
-ALLOWED_HOSTS = ['13.53.39.8', 'localhost', 'procuretopays.netlify.app']
+ALLOWED_HOSTS = ['16.171.30.43', 'localhost', 'procuretopays.netlify.app']
 
 # Database
 DATABASES = {
