@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
@@ -15,6 +17,26 @@ import { Profile } from './pages/Profile';
 import './App.css';
 
 function App() {
+    useEffect(() => {
+    const hasSeenNotice = localStorage.getItem('service-notice-2024');
+    if (!hasSeenNotice) {
+      setTimeout(() => {
+        toast.success(
+          "We apologize for the recent service interruption. The system is now fully operational. Please note: API documentation has moved to http://16.171.30.43:8000/api/docs/. from the one I submitted in email. Thank you for your patience."
+, 
+          {
+            duration: 8000,
+            style: {
+              background: '#10B981',
+              color: '#fff',
+            },
+          }
+        );
+        localStorage.setItem('service-notice-2024', 'true');
+      }, 1000); // Show after 1 second
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
