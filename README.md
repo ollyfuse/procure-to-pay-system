@@ -1,169 +1,278 @@
 # Procure-to-Pay System
 
-A comprehensive full-stack procurement management system built with Django REST Framework backend and React TypeScript frontend, featuring role-based access control, multi-level approvals, and AI-powered document processing.
+A comprehensive enterprise procurement management system built with Django REST Framework and React TypeScript, featuring AI-powered document processing, multi-level approvals, and role-based access control.
 
-## 🚀 Current Features
+## 🌟 Live Demo
 
-### Backend (Django + DRF)
-- ✅ **Authentication & Authorization**
-  - JWT-based authentication with refresh tokens
-  - Custom user model with role-based permissions
-  - Four distinct user roles: Staff, Approver L1, Approver L2, Finance
-- ✅ **Purchase Request Management**
-  - Full CRUD operations with role-based access
-  - Multi-level approval workflow (L1 → L2 → Finance)
-  - Request status tracking and history
-  - Optimistic locking to prevent race conditions
-- ✅ **Document Processing**
-  - Secure file upload with validation
-  - OCR text extraction (pdfplumber + pytesseract)
-  - AI-powered metadata extraction using Google Gemini
-  - Async processing with Celery tasks
-- ✅ **Purchase Order Generation**
-  - Automatic PO creation upon full approval
-  - Structured PO numbering system (PO-YYYY-NNNNNN)
-  - Vendor information integration
-- ✅ **Payment & Receipt Management**
-  - Payment status tracking
-  - Receipt upload and validation
-  - Receipt-to-PO comparison and discrepancy detection
-- ✅ **Notifications System**
-  - Email notifications for approvals, rejections, clarifications
-  - Receipt reminders and finance notifications
-- ✅ **Infrastructure**
-  - Docker containerization with PostgreSQL and Redis
-  - Comprehensive test suite
-  - Environment-based configuration
+- **Application**: [https://procuretopays.netlify.app](https://procuretopays.netlify.app)
+- **API Documentation**: [http://16.171.30.43/api/docs/](http://16.171.30.43/api/docs)
+-**GitHub repo**: [https://github.com/ollyfuse/procure-to-pay-system.git] (https://github.com/ollyfuse/procure-to-pay-system.git)
 
-### Frontend (React + TypeScript)
-- ✅ **Modern Tech Stack**
-  - React 19 with TypeScript
-  - Tailwind CSS for responsive design
-  - Vite for fast development and building
-- ✅ **Authentication & Navigation**
-  - JWT token management with auto-refresh
-  - Protected routes with role-based access
-  - Responsive sidebar navigation
-- ✅ **Role-Based Dashboards**
-  - Staff: Request creation, tracking, receipt submission
-  - Approvers: Approval queue, history, clarification requests
-  - Finance: Payment processing, receipt validation
-- ✅ **Document Management**
-  - Drag-and-drop file uploads
-  - Real-time processing status
-  - Document viewer with metadata display
-- ✅ **Advanced Features**
-  - Receipt-to-PO comparison interface
-  - Payment status management
-  - Clarification workflow
-  - Approval history tracking
+## 🏗️ Architecture
 
-## 👥 Demo Credentials
+### Backend Stack
+- **Framework**: Django REST Framework
+- **Database**: PostgreSQL
+- **Cache/Queue**: Redis + Celery
+- **AI Processing**: Google Gemini API
+- **Authentication**: JWT with refresh tokens
+- **Deployment**: Docker + AWS EC2
 
-The system includes pre-configured demo accounts for testing:
+### Frontend Stack
+- **Framework**: React 19 + TypeScript
+- **Styling**: Tailwind CSS
+- **Build Tool**: Vite
+- **Deployment**: Netlify
+- **State Management**: React Context
 
-| Role | Username | Password | Capabilities |
-|------|----------|----------|-------------|
-| **Staff** | `staff_user` | `testpass123` | Create requests, upload documents, submit receipts |
-| **Approver L1** | `approver_l1` | `testpass123` | First-level approvals, request clarifications |
-| **Approver L2** | `approver_l2` | `testpass123` | Final approvals, trigger PO generation |
-| **Finance** | `finance_user` | `testpass123` | Payment processing, receipt validation |
+## ✨ Key Features
 
-## 🔗 API Endpoints
+### 🔐 Authentication & Authorization
+- JWT-based authentication with auto-refresh
+- Role-based access control (Staff, Approver L1/L2, Finance)
+- Protected routes and API endpoints
 
-### Authentication
-- `POST /api/auth/login/` - User authentication
-- `POST /api/auth/refresh/` - Token refresh
-- `POST /api/auth/register/` - User registration
-- `GET /api/auth/profile/` - User profile
+### 📋 Purchase Request Management
+- Complete CRUD operations with role-based filtering
+- Multi-level approval workflow (L1 → L2 → Finance)
+- Request status tracking and approval history
+- Optimistic locking to prevent race conditions
 
-### Purchase Requests
-- `GET /api/requests/` - List requests (role-filtered)
-- `POST /api/requests/` - Create request (staff only)
-- `GET /api/requests/{id}/` - Request details
-- `PATCH /api/requests/{id}/` - Update request (owner, pending only)
-- `DELETE /api/requests/{id}/` - Delete request (owner, pending only)
-- `PATCH /api/requests/{id}/approve/` - Approve request
-- `PATCH /api/requests/{id}/reject/` - Reject request
-- `POST /api/requests/{id}/request-clarification/` - Request more info
-- `POST /api/requests/{id}/respond-to-clarification/` - Respond to clarification
-- `POST /api/requests/{id}/upload-proforma/` - Upload proforma document
-- `POST /api/requests/{id}/upload-receipt/` - Upload receipt
-- `PATCH /api/requests/{id}/update-payment-status/` - Update payment status
-- `GET /api/requests/my-approvals/` - Approver's decision history
+### 🤖 AI-Powered Document Processing
+- OCR text extraction from PDFs and images
+- Automated metadata extraction using Google Gemini
+- Vendor information and line item detection
+- Asynchronous processing with Celery
 
-### Purchase Orders
-- `GET /api/purchase-orders/` - List purchase orders
-- `GET /api/purchase-orders/{id}/` - PO details
-###
-- `http://13.53.39.8/api/docs/` - swagger api
+### 📄 Purchase Order Generation
+- Automatic PO creation upon full approval
+- Structured numbering system (PO-YYYY-NNNNNN)
+- Vendor information integration
+
+### 💰 Payment & Receipt Management
+- Payment status tracking and updates
+- Receipt upload and validation
+- AI-powered receipt-to-PO comparison
+- Discrepancy detection and reporting
+
+### 📧 Notification System
+- Email notifications for all workflow events
+- Approval/rejection notifications
+- Receipt reminders and finance alerts
+- Clarification request workflows
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Docker & Docker Compose** (recommended)
-- **Node.js 18+** (for frontend development)
-- **Python 3.11+** (for local backend development)
-- **Git**
+- Docker & Docker Compose
+- Node.js 18+
+- Git
 
-### Option 1: Docker Setup (Recommended)
-
-1. **Clone and setup:**
+### 1. Clone Repository
 ```bash
-git clone <repo-url>
+git clone <your-repo-url>
 cd procure-to-pay
 
+2. Backend Setup
 cd backend
 cp .env.example .env
-# Edit .env with your configuration
+# Configure your environment variables (see Configuration section)
+
+# Start services
 docker-compose up -d
 
-
+# Run migrations and seed data
 docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py seed_users
 
-cd ../frontend
+Copy
+
+Insert at cursor
+bash
+3. Frontend Setup
+cd frontend
 npm install
+npm run build
+
+# Deploy to Netlify or run locally
 npm run dev
 
-backend/
-├── apps/
-│   ├── users/          # User management & authentication
-│   ├── requests/       # Purchase request CRUD & workflow
-│   ├── approvals/      # Approval workflow & history
-│   ├── documents/      # File processing & AI extraction
-│   ├── po/            # Purchase order generation
-│   └── notifications/ # Email notifications
-├── backend/
-│   └── settings/      # Environment-based settings
-└── tests/             # Comprehensive test suite
+Copy
 
-
-
-frontend/src/
-├── components/        # Reusable UI components
-├── pages/            # Route-based page components
-├── services/         # API service layer
-├── context/          # React context (Auth)
-└── types/           # TypeScript type definitions
-
-
+Insert at cursor
+bash
+⚙️ Configuration
+Backend Environment Variables
 # Database
 DB_NAME=procure_to_pay
 DB_USER=postgres
-DB_PASSWORD=postgres
+DB_PASSWORD=your-secure-password
+DB_HOST=db
+DB_PORT=5432
 
 # AI Processing
 GOOGLE_API_KEY=your-gemini-api-key
 
-# Email Notifications
+# Email Configuration
+EMAIL_HOST=smtp.gmail.com
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 
-# CORS (for frontend)
-CORS_ALLOWED_ORIGINS=http://localhost:3000
+# Security
+SECRET_KEY=your-secret-key
+DEBUG=False
+ALLOWED_HOSTS=your-domain.com,localhost
 
+# CORS
+CORS_ALLOW_ALL_ORIGINS=True
+
+Copy
+
+Insert at cursor
+bash
+Frontend Environment Variables
+VITE_API_URL=/.netlify/functions/api
+
+Copy
+
+Insert at cursor
+bash
+👥 User Roles & Permissions
+Role	Capabilities
+Staff	Create requests, upload documents, submit receipts
+Approver L1	First-level approvals, request clarifications
+Approver L2	Final approvals, trigger PO generation
+Finance	Payment processing, receipt validation
+🔗 API Reference
+Authentication Endpoints
+POST /api/auth/login/          # User login
+POST /api/auth/refresh/        # Token refresh
+GET  /api/auth/profile/        # User profile
+
+Copy
+
+Insert at cursor
+Purchase Request Endpoints
+GET    /api/requests/                              # List requests
+POST   /api/requests/                              # Create request
+GET    /api/requests/{id}/                         # Request details
+PATCH  /api/requests/{id}/approve/                 # Approve request
+PATCH  /api/requests/{id}/reject/                  # Reject request
+POST   /api/requests/{id}/upload-proforma/         # Upload proforma
+POST   /api/requests/{id}/upload-receipt/          # Upload receipt
+PATCH  /api/requests/{id}/update-payment-status/   # Update payment
+
+Copy
+
+Insert at cursor
+Purchase Order Endpoints
+GET /api/purchase-orders/      # List purchase orders
+GET /api/purchase-orders/{id}/ # PO details
+
+Copy
+
+Insert at cursor
+🏗️ Project Structure
+procure-to-pay/
+├── backend/
+│   ├── apps/
+│   │   ├── users/          # Authentication & user management
+│   │   ├── requests/       # Purchase request CRUD & workflow
+│   │   ├── approvals/      # Multi-level approval system
+│   │   ├── documents/      # AI document processing
+│   │   ├── po/            # Purchase order generation
+│   │   └── notifications/ # Email notification system
+│   ├── backend/settings/   # Environment-based configuration
+│   └── tests/             # Comprehensive test suite
+└── frontend/src/
+    ├── components/        # Reusable UI components
+    ├── pages/            # Route-based page components
+    ├── services/         # API service layer
+    ├── context/          # React context providers
+    └── types/           # TypeScript type definitions
+
+Copy
+
+Insert at cursor
+🧪 Testing
 Backend Tests
-
 cd backend
 python manage.py test
+
+Copy
+
+Insert at cursor
+bash
+Frontend Tests
+cd frontend
+npm run test
+
+Copy
+
+Insert at cursor
+bash
+🚀 Deployment
+Backend (AWS EC2)
+Configure environment variables
+
+Run docker-compose up -d
+
+Execute migrations and seed data
+
+Frontend (Netlify)
+Build: npm run build
+
+Deploy dist folder to Netlify
+
+Configure Netlify Functions for API proxy
+
+🔒 Security Features
+JWT authentication with refresh tokens
+
+Role-based access control
+
+CORS protection
+
+File upload validation
+
+SQL injection prevention
+
+XSS protection headers
+
+📈 Performance Features
+Optimistic locking for concurrent operations
+
+Async document processing with Celery
+
+Database query optimization
+
+CDN delivery via Netlify
+
+Redis caching for sessions
+
+🤝 Contributing
+Fork the repository
+
+Create a feature branch
+
+Make your changes
+
+Add tests for new functionality
+
+Submit a pull request
+
+📄 License
+This project is licensed under the MIT License.
+
+🆘 Support
+For support and questions:
+
+Create an issue in the repository
+
+Check the API documentation
+
+Review the test cases for usage examples
+
+Built with ❤️ using Django REST Framework and React TypeScript
+
+<link rel="icon" type="image/svg+xml" href="/p2p.svg" />

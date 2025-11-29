@@ -6,7 +6,7 @@ exports.handler = async (event, context) => {
     const apiPath = path.replace('/.netlify/functions/api', '');
     const queryString = queryStringParameters ? 
       '?' + new URLSearchParams(queryStringParameters).toString() : '';
-    const backendUrl = `http://13.53.39.8/api${apiPath}${queryString}`;
+    const backendUrl = `http://16.171.30.43/api${apiPath}${queryString}`;
     
     console.log('Proxying request:', {
       method: httpMethod,

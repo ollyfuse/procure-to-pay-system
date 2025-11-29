@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
@@ -15,6 +17,34 @@ import { Profile } from './pages/Profile';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+  const hasSeenNotice = localStorage.getItem('service-notice-2024');
+  if (!hasSeenNotice) {
+    setTimeout(() => {
+      toast.custom((t) => (
+        <div className="bg-green-500 text-white p-4 rounded-lg shadow-lg max-w-md">
+          <p className="text-sm mb-3">
+            I apologize for the recent service down time. The system is now fully operational. 
+            Please note: API documentation has moved to http://16.171.30.43:8000/api/docs/. 
+            Thank you for your patience.
+          </p>
+          <button
+            onClick={() => {
+              localStorage.setItem('service-notice-2024', 'true');
+              toast.dismiss(t.id);
+            }}
+            className="bg-white text-green-500 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100"
+          >
+            Got it
+          </button>
+        </div>
+      ), {
+        duration: Infinity,
+      });
+    }, 1000);
+  }
+}, []);
+
   return (
     <AuthProvider>
       <Router>
