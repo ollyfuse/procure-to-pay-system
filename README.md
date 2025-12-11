@@ -6,7 +6,7 @@ A comprehensive enterprise procurement management system built with Django REST 
 
 - **Application**: [https://procuretopays.netlify.app](https://procuretopays.netlify.app)
 - **API Documentation**: [http://16.171.30.43/api/docs/](http://16.171.30.43/api/docs)
--**GitHub repo**: [https://github.com/ollyfuse/procure-to-pay-system.git] (https://github.com/ollyfuse/procure-to-pay-system.git)
+- **GitHub repo**: [https://github.com/ollyfuse/procure-to-pay-system.git](https://github.com/ollyfuse/procure-to-pay-system.git)
 
 ## 🏗️ Architecture
 
@@ -85,9 +85,6 @@ docker-compose up -d
 docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py seed_users
 
-Copy
-
-Insert at cursor
 bash
 3. Frontend Setup
 cd frontend
@@ -97,9 +94,6 @@ npm run build
 # Deploy to Netlify or run locally
 npm run dev
 
-Copy
-
-Insert at cursor
 bash
 ⚙️ Configuration
 Backend Environment Variables
@@ -126,16 +120,10 @@ ALLOWED_HOSTS=your-domain.com,localhost
 # CORS
 CORS_ALLOW_ALL_ORIGINS=True
 
-Copy
-
-Insert at cursor
 bash
 Frontend Environment Variables
 VITE_API_URL=/.netlify/functions/api
 
-Copy
-
-Insert at cursor
 bash
 👥 User Roles & Permissions
 Role	Capabilities
@@ -149,9 +137,6 @@ POST /api/auth/login/          # User login
 POST /api/auth/refresh/        # Token refresh
 GET  /api/auth/profile/        # User profile
 
-Copy
-
-Insert at cursor
 Purchase Request Endpoints
 GET    /api/requests/                              # List requests
 POST   /api/requests/                              # Create request
@@ -162,16 +147,10 @@ POST   /api/requests/{id}/upload-proforma/         # Upload proforma
 POST   /api/requests/{id}/upload-receipt/          # Upload receipt
 PATCH  /api/requests/{id}/update-payment-status/   # Update payment
 
-Copy
-
-Insert at cursor
 Purchase Order Endpoints
 GET /api/purchase-orders/      # List purchase orders
 GET /api/purchase-orders/{id}/ # PO details
 
-Copy
-
-Insert at cursor
 🏗️ Project Structure
 procure-to-pay/
 ├── backend/
@@ -191,25 +170,16 @@ procure-to-pay/
     ├── context/          # React context providers
     └── types/           # TypeScript type definitions
 
-Copy
-
-Insert at cursor
 🧪 Testing
 Backend Tests
 cd backend
 python manage.py test
 
-Copy
-
-Insert at cursor
 bash
 Frontend Tests
 cd frontend
 npm run test
 
-Copy
-
-Insert at cursor
 bash
 🚀 Deployment
 Backend (AWS EC2)
@@ -275,4 +245,3 @@ Review the test cases for usage examples
 
 Built with ❤️ using Django REST Framework and React TypeScript
 
-<link rel="icon" type="image/svg+xml" href="/p2p.svg" />
